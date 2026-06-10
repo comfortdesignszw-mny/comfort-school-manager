@@ -12,70 +12,172 @@
   color-scheme: dark;
 }
 
+/* ==========================================================================
+   LIGHT MODE CONTRASTS (Perfectly dark text on white/light backgrounds)
+   ========================================================================== */
 body {
-  @apply bg-gray-50 text-gray-900 transition-colors duration-300;
+  @apply bg-gray-50 text-gray-950 transition-colors duration-300;
 }
 
-.dark body {
-  @apply bg-slate-950 text-gray-100;
+/* Ensure text headers and copy in light mode are crisp black/slate */
+.text-gray-955, .text-gray-950, .text-gray-900 {
+  color: #020617 !important; /* solid deep slate-950 */
+}
+.text-gray-850, .text-gray-800, .text-gray-750, .text-gray-700 {
+  color: #0f172a !important; /* solid deep slate-900 */
+}
+.text-gray-650, .text-gray-600 {
+  color: #334155 !important; /* dark slate-700 */
+}
+.text-gray-550, .text-gray-500 {
+  color: #475569 !important; /* slate-600 */
+}
+.text-gray-400 {
+  color: #64748b !important; /* slate-500 */
 }
 
 .glass-card {
-  @apply bg-white p-6 rounded-xl border border-gray-200 shadow-sm transition-all duration-300 relative;
-}
-
-.dark .glass-card {
-  @apply bg-slate-900/60 backdrop-blur-xl border border-cyan-500/30 shadow-[0_4px_30px_rgba(6,182,212,0.05)];
+  @apply bg-white p-6 rounded-xl border border-gray-200 shadow-sm transition-all duration-300 relative text-gray-950;
 }
 
 .input-field {
-  @apply w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-primary focus:border-primary bg-white text-gray-900 transition-colors;
-}
-
-.dark .input-field {
-  @apply border-cyan-900/50 bg-slate-900/50 text-white placeholder-gray-500 focus:ring-cyan-500 focus:border-cyan-500;
+  @apply w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-primary focus:border-primary bg-white text-gray-950 transition-colors font-medium;
 }
 
 .table-container {
   @apply bg-white border border-gray-200 rounded-xl overflow-hidden flex-1 flex flex-col shadow-sm transition-colors;
 }
 
-.dark .table-container {
-  @apply bg-slate-900/40 border-cyan-900/30 backdrop-blur-md shadow-[0_4px_30px_rgba(6,182,212,0.05)];
-}
-
 .table-header {
-  @apply bg-gray-50 text-gray-500 border-b border-gray-200 transition-colors;
-}
-
-.dark .table-header {
-  @apply bg-slate-900/80 text-cyan-200/70 border-cyan-900/30;
+  @apply bg-gray-50 text-gray-800 border-b border-gray-200 transition-colors font-bold;
 }
 
 .table-row {
-  @apply hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-0;
+  @apply hover:bg-gray-100/65 transition-colors border-b border-gray-100 last:border-0;
+}
+
+/* ==========================================================================
+   DARK MODE CONTRASTS (Highly legible light text with dynamic theme-color accenting)
+   ========================================================================== */
+.dark body {
+  @apply bg-slate-950 text-slate-100;
+}
+
+/* Force all dark mode headers, titles and values to be brilliantly pure bright white */
+.dark .text-gray-955,
+.dark .text-gray-950,
+.dark .text-gray-900,
+.dark .text-gray-850,
+.dark .text-gray-800,
+.dark .text-gray-750,
+.dark .text-gray-700,
+.dark h1,
+.dark h2,
+.dark h3,
+.dark h4,
+.dark h5,
+.dark h6,
+.dark .table-row td.font-bold {
+  color: #ffffff !important;
+}
+
+/* Force all secondary copy and middle-contrast text in dark mode to be ultra high-contrast slate-100 */
+.dark .text-gray-650,
+.dark .text-gray-600,
+.dark span.font-medium,
+.dark .table-row td,
+.dark select,
+.dark option {
+  color: #f1f5f9 !important; /* clear Slate-100 */
+}
+
+/* Subtitles, labels, and placeholders in dark mode map to high-contrast slate-300 */
+.dark .text-gray-550,
+.dark .text-gray-500,
+.dark .text-gray-440,
+.dark .text-gray-400,
+.dark .text-gray-300,
+.dark p,
+.dark label,
+.dark span.text-xs {
+  color: #cbd5e1 !important; /* rich legible Slate-300 */
+}
+
+/* Highlight primary elements using settings.themeColor */
+.dark .text-primary,
+.dark .text-cyan-400,
+.dark button.text-primary {
+  color: var(--primary-color) !important;
+  filter: saturate(1.5) brightness(1.35); /* Enhance saturate & glow */
+}
+
+/* Soft containers in dark mode must be dark slate, never transparent/dark gray overlays */
+.dark .bg-gray-50,
+.dark .bg-gray-100,
+.dark .bg-gray-150,
+.dark .bg-gray-200,
+.dark .bg-slate-50,
+.dark .bg-slate-100,
+.dark .bg-gray-50\/50,
+.dark .bg-gray-50\/55,
+.dark .bg-slate-50\/30,
+.dark .bg-slate-800\/30,
+.dark .bg-slate-950\/20 {
+  background-color: #0f172a !important; /* solid space slate-900 */
+  border-color: rgba(6, 182, 212, 0.25) !important;
+}
+
+/* General containers & popups styling */
+.dark .glass-card {
+  background-color: rgba(15, 23, 42, 0.85) !important;
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+/* Make containers with active elements glow with the system's custom themeColor accent! */
+.dark .glass-card:hover {
+  border-color: var(--primary-color) !important;
+  box-shadow: 0 8px 30px -4px rgba(0, 0, 0, 0.6), 0 0 12px 1px var(--primary-color) !important;
+}
+
+/* Polish inputs and selects inside overlays */
+.dark .input-field,
+.dark select.input-field,
+.dark textarea.input-field {
+  background-color: #020617 !important; /* pitch black contrast slate-950 */
+  border: 1px solid var(--primary-color) !important;
+  color: #ffffff !important;
+}
+
+.dark .input-field:focus {
+  box-shadow: 0 0 0 2px var(--primary-color) !important;
+}
+
+/* ENHANCE THE SYSTEM'S STUDENT DIRECTORY & MODALS TO ADOPT SYSTEM THEME-COLOR */
+.dark .table-container {
+  background-color: rgba(15, 23, 42, 0.95) !important;
+  border: 1.5px solid var(--primary-color) !important;
+  box-shadow: 0 15px 35px -10px rgba(0,0,0,0.6), 0 0 15px -3px var(--primary-color) !important;
+}
+
+.dark .table-header {
+  background-color: #020617 !important;
+  border-bottom: 2px solid var(--primary-color) !important;
 }
 
 .dark .table-row {
-  @apply hover:bg-slate-800/50 border-cyan-900/10;
+  @apply hover:bg-slate-800/80 transition-colors border-b border-slate-800;
 }
 
-.dark .text-gray-900 {
-  @apply text-gray-100;
+/* Details and forms overlays - apply bright accent bordering of the system themeColor */
+.dark .fixed > div.bg-white.dark\:bg-slate-900 {
+  background-color: #0f172a !important;
+  border: 2px solid var(--primary-color) !important;
+  box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.8), 0 0 25px 1px var(--primary-color) !important;
 }
 
-.dark .text-gray-600 {
-  @apply text-cyan-100/70;
+.dark .fixed > div.bg-white.dark\:bg-slate-900 h2,
+.dark .fixed > div.bg-white.dark\:bg-slate-900 h3 {
+  color: #ffffff !important;
 }
 
-.dark .text-gray-500 {
-  @apply text-cyan-100/50;
-}
-
-.dark .bg-gray-50 {
-  @apply bg-slate-900/30 border-cyan-900/30;
-}
-
-.dark .border-gray-200 {
-  @apply border-cyan-900/30;
-}
