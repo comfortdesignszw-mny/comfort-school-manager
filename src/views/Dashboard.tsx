@@ -61,7 +61,7 @@ export default function Dashboard() {
         <p className="text-gray-500 mt-1">Real-time stats hub and admin verification panels.</p>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
         <StatCard title="Enrolled Students" value={studentsCount} icon={Users} color="bg-blue-100/80 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400" />
         <StatCard title="Active Classes" value={classesCount} icon={GraduationCap} color="bg-purple-100/80 text-purple-600 dark:bg-purple-500/10 dark:text-purple-400" />
         <StatCard title="School Staff" value={staffCount} icon={Contact} color="bg-pink-100/80 text-pink-600 dark:bg-pink-500/10 dark:text-pink-400" />
@@ -130,13 +130,13 @@ export default function Dashboard() {
 
 function StatCard({ title, value, icon: Icon, color }: { title: string, value: string | number, icon: any, color: string }) {
   return (
-    <div className="glass-card flex items-center gap-3 p-4">
-      <div className={`p-3 rounded-lg bg-opacity-20 dark:bg-opacity-10 backdrop-blur-sm shrink-0 ${color}`}>
-        <Icon className="w-5 h-5" />
+    <div className="glass-card flex items-center gap-4 p-5 hover:scale-[1.01] transition-transform">
+      <div className={`p-3.5 rounded-xl bg-opacity-20 dark:bg-opacity-10 backdrop-blur-sm shrink-0 ${color}`}>
+        <Icon className="w-6 h-6" />
       </div>
-      <div className="min-w-0">
-        <h4 className="text-[10px] sm:text-xs font-bold text-gray-400 uppercase tracking-wider truncate" title={title}>{title}</h4>
-        <div className="text-sm sm:text-base font-extrabold text-gray-950 mt-0.5 truncate" title={String(value)}>{value}</div>
+      <div className="min-w-0 flex-1">
+        <h4 className="text-[11px] sm:text-xs font-bold text-gray-500 dark:text-cyan-200/50 uppercase tracking-wider leading-tight" title={title}>{title}</h4>
+        <div className="text-base sm:text-lg lg:text-xl font-extrabold text-gray-950 dark:text-white mt-1 leading-snug break-words" title={String(value)}>{value}</div>
       </div>
     </div>
   );

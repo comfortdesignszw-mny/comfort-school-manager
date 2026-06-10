@@ -204,16 +204,16 @@ export default function Fees() {
         </div>
       </div>
 
-      <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm flex flex-col">
-        <div className="p-4 border-b border-gray-150 flex flex-wrap gap-3 items-center justify-between bg-gray-50/50">
+      <div className="table-container shadow-xs flex flex-col">
+        <div className="p-4 border-b border-gray-150 dark:border-slate-800 flex flex-wrap gap-3 items-center justify-between bg-gray-50/50 dark:bg-slate-950/20">
           <div className="relative flex-1 max-w-xs">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-cyan-400/50 w-4 h-4" />
             <input 
               type="text" 
               placeholder="Search student or receipt..." 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-4 py-1.5 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+              className="w-full pl-9 pr-4 py-1.5 bg-white dark:bg-slate-950 border border-gray-200 dark:border-cyan-900/30 rounded-lg text-sm text-gray-950 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary/20"
             />
           </div>
           <div className="flex gap-2">
@@ -221,10 +221,10 @@ export default function Fees() {
               <button
                 key={f}
                 onClick={() => setStatusFilter(f)}
-                className={`px-3 py-1 text-xs font-medium rounded-full transition-colors ${
+                className={`px-3 py-1 text-xs font-semibold rounded-full transition-colors ${
                   statusFilter === f 
-                    ? 'bg-primary text-white' 
-                    : 'bg-white border text-gray-600 hover:bg-gray-50'
+                    ? 'bg-primary text-white shadow-xs' 
+                    : 'bg-white dark:bg-slate-800 border border-gray-200 dark:border-cyan-950/20 text-gray-600 dark:text-cyan-100/75 hover:bg-gray-55 dark:hover:bg-slate-700'
                 }`}
               >
                 {f}
@@ -235,7 +235,7 @@ export default function Fees() {
 
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse min-w-[700px]">
-            <thead className="bg-gray-50 text-gray-500 text-xs uppercase font-semibold border-b border-gray-200">
+            <thead className="table-header">
               <tr>
                 <th className="py-3 px-4">Date</th>
                 <th className="py-3 px-4">Student Name</th>
@@ -246,36 +246,36 @@ export default function Fees() {
                 <th className="py-3 px-4 text-right">Action</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100 text-sm">
+            <tbody className="divide-y divide-gray-100 dark:divide-slate-800 text-sm font-medium">
               {fees.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="py-12 text-center text-gray-400 italic">
+                  <td colSpan={7} className="py-12 text-center text-gray-400 dark:text-cyan-200/40 italic">
                     No matching billing records found.
                   </td>
                 </tr>
               ) : (
                 fees.map(fee => (
-                  <tr key={fee.id} className="hover:bg-gray-50/50 transition-colors">
-                    <td className="py-3.5 px-4 text-gray-500">{new Date(fee.date).toLocaleDateString()}</td>
-                    <td className="py-3.5 px-4 font-semibold text-gray-900">{fee.studentName}</td>
-                    <td className="py-3.5 px-4 text-gray-600">{fee.termOrMonth}</td>
+                  <tr key={fee.id} className="table-row">
+                    <td className="py-3.5 px-4 text-gray-550 dark:text-slate-300">{new Date(fee.date).toLocaleDateString()}</td>
+                    <td className="py-3.5 px-4 font-bold text-gray-950 dark:text-white">{fee.studentName}</td>
+                    <td className="py-3.5 px-4 text-gray-600 dark:text-slate-200">{fee.termOrMonth}</td>
                     <td className="py-3.5 px-4">
                       {fee.receiptNumber ? (
-                        <span className="font-mono text-xs text-gray-600 bg-gray-50 border px-2 py-0.5 rounded">
+                        <span className="font-mono text-xs text-gray-600 dark:text-cyan-200 bg-gray-50 dark:bg-slate-950 border border-gray-200 dark:border-cyan-900/40 px-2 py-0.5 rounded">
                           {fee.receiptNumber}
                         </span>
                       ) : (
-                        <span className="text-xs text-gray-400 italic font-medium flex items-center gap-1">
-                          <HelpCircle className="w-3 h-3" /> Auto Recorded Unpaid
+                        <span className="text-xs text-gray-400 dark:text-cyan-200/40 italic font-semibold flex items-center gap-1">
+                          <HelpCircle className="w-3 h-3 text-rose-450 dark:text-rose-450" /> Auto Recorded Unpaid
                         </span>
                       )}
                     </td>
-                    <td className="py-3.5 px-4 font-bold text-gray-900 text-right">${fee.amount.toFixed(2)}</td>
+                    <td className="py-3.5 px-4 font-extrabold text-gray-950 dark:text-white text-right">${fee.amount.toFixed(2)}</td>
                     <td className="py-3.5 px-4">
-                      <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold inline-flex items-center
-                        ${fee.status === 'Paid' ? 'bg-emerald-100 text-emerald-800' : ''}
-                        ${fee.status === 'Partial' ? 'bg-blue-100 text-blue-800' : ''}
-                        ${fee.status === 'Unpaid' ? 'bg-rose-100 text-rose-800' : ''}
+                      <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold inline-flex items-center
+                        ${fee.status === 'Paid' ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-500/10 dark:text-emerald-400' : ''}
+                        ${fee.status === 'Partial' ? 'bg-blue-100 text-blue-800 dark:bg-blue-500/10 dark:text-cyan-400' : ''}
+                        ${fee.status === 'Unpaid' ? 'bg-rose-100 text-rose-800 dark:bg-rose-500/10 dark:text-rose-400' : ''}
                       `}>
                         {fee.status}
                       </span>
@@ -289,7 +289,7 @@ export default function Fees() {
                               setMarkingTxStudentName(fee.studentName);
                             }
                           }}
-                          className="bg-emerald-500 hover:bg-emerald-600 text-white font-semibold px-3 py-1 rounded text-xs transition-colors"
+                          className="bg-emerald-500 hover:bg-emerald-600 text-white font-bold px-3 py-1 rounded text-xs transition-colors shadow-xs cursor-pointer"
                         >
                           Mark as Paid
                         </button>
