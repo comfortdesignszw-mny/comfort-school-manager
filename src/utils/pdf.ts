@@ -1,14 +1,28 @@
-// @ts-ignore
-import html2pdf from 'html2pdf.js';
-
 export const downloadPDF = (htmlString: string, filename: string) => {
-  const opt = {
-    margin:       10,
-    filename:     filename,
-    image:        { type: 'jpeg', quality: 0.98 },
-    html2canvas:  { scale: 2, useCORS: true, logging: false },
-    jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
-  };
-  
-  html2pdf().set(opt).from(htmlString).save();
+  const iframe = document.createElement('iframe');
+  iframe.style.display = 'none';
+  document.body.appendChild(iframe);
+
+  const doc = iframe.contentWindow?.document;
+  if (!doc) {
+    document.body.removeChild(iframe);
+    return;
+  }
+
+  doc.open();
+  doc.write(htmlString);
+  doc.close();
+
+  // title is used as the default filename when printing to PDF in most browsers
+  doc.title = filename.replace('.pdf', '');
+
+  setTimeout(() => {
+    iframe.contentWindow?.focus();
+    iframe.contentWindow?.print();
+    
+    // Cleanup
+    setTimeout(() => {
+      document.body.removeChild(iframe);
+    }, 1000);
+  }, 500); // Give images a moment to load
 };
