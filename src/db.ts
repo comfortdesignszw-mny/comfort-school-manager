@@ -1,11 +1,12 @@
 import Dexie, { type Table } from 'dexie';
-import type { Student, Class, FeeTransaction, Notice } from './types';
+import type { Student, Class, FeeTransaction, Notice, Staff } from './types';
 
 export class SchoolDatabase extends Dexie {
   students!: Table<Student, number>;
   classes!: Table<Class, number>;
   fees!: Table<FeeTransaction, number>;
   notices!: Table<Notice, number>;
+  staff!: Table<Staff, number>;
 
   constructor() {
     super('SchoolManagerProDB');
@@ -14,6 +15,13 @@ export class SchoolDatabase extends Dexie {
       classes: '++id, name',
       fees: '++id, studentId, termOrMonth, status, date',
       notices: '++id, date, audience',
+    });
+    this.version(2).stores({
+      students: '++id, fullName, nationalId, schoolData.classId',
+      classes: '++id, name',
+      fees: '++id, studentId, termOrMonth, status, date',
+      notices: '++id, date, audience',
+      staff: '++id, fullName, title',
     });
   }
 }

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { getSettings, saveSettings } from '../db';
 import { backupData, restoreData } from '../utils/backup';
 import { Download, Upload } from 'lucide-react';

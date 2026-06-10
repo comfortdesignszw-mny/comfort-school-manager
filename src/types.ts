@@ -60,3 +60,13 @@ export interface AppSettings {
   systemMode: 'Primary' | 'Secondary' | 'Tertiary';
   themeColor: string;
 }
+
+export interface Staff {
+  id?: number;
+  fullName: string;
+  title: string; // e.g. 'Teacher', 'Lecturer', 'Principal', etc.
+  contact?: string;
+  email?: string;
+  status: 'Active' | 'Inactive';
+}
+

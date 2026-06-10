@@ -1,16 +1,29 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../db';
-import { Users, GraduationCap, BookOpen, Banknote } from 'lucide-react';
+import { Users, GraduationCap, BookOpen, Banknote, CheckCircle2, AlertCircle, Percent, Contact } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 export default function Dashboard() {
   const studentsCount = useLiveQuery(() => db.students.count(), []) || 0;
   const classesCount = useLiveQuery(() => db.classes.count(), []) || 0;
+  const staffCount = useLiveQuery(() => db.staff.count(), []) || 0;
   const fees = useLiveQuery(() => db.fees.toArray(), []) || [];
+  const studentsList = useLiveQuery(() => db.students.toArray(), []) || [];
   const recentNotices = useLiveQuery(() => db.notices.orderBy('date').reverse().limit(5).toArray(), []) || [];
 
-  const paidFeesCount = fees.filter(f => f.status === 'Paid').length;
-  const financialProgress = fees.length > 0 ? Math.round((paidFeesCount / fees.length) * 100) : 0;
+  const paidTransactions = fees.filter(f => f.status === 'Paid');
+  const unpaidTransactions = fees.filter(f => f.status === 'Unpaid');
+
+  const totalPaidSum = paidTransactions.reduce((sum, f) => sum + f.amount, 0);
+  const totalUnpaidSum = unpaidTransactions.reduce((sum, f) => sum + f.amount, 0);
+
+  // percentage paid against total students
+  const actualPaidStudentsCount = studentsList.filter(s => {
+    return fees.some(f => f.status === 'Paid' && (f.studentId === s.id || f.studentName.toLowerCase() === s.fullName.toLowerCase()));
+  }).length;
+
+  const percentagePaidCoverage = studentsCount > 0 ? Math.round((actualPaidStudentsCount / studentsCount) * 100) : 0;
+  const financialProgress = fees.length > 0 ? Math.round((paidTransactions.length / fees.length) * 100) : 0;
 
   // Process data for chart
   const processChartData = () => {
@@ -44,15 +57,17 @@ export default function Dashboard() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold text-gray-900 tracking-tight">Dashboard</h2>
-        <p className="text-gray-500 mt-1">Overview of your school's activities.</p>
+        <h2 className="text-2xl font-bold text-gray-900 tracking-tight">Dashboard Overview</h2>
+        <p className="text-gray-500 mt-1">Real-time stats hub and admin verification panels.</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <StatCard title="Total Students" value={studentsCount} icon={Users} color="bg-blue-100 text-blue-600" />
-        <StatCard title="Classes" value={classesCount} icon={GraduationCap} color="bg-green-100 text-green-600" />
-        <StatCard title="Active Subjects" value={0} icon={BookOpen} color="bg-purple-100 text-purple-600" />
-        <StatCard title="Fee Collection" value={`${financialProgress}%`} icon={Banknote} color="bg-amber-100 text-amber-600" />
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+        <StatCard title="Enrolled Students" value={studentsCount} icon={Users} color="bg-blue-100/80 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400" />
+        <StatCard title="Active Classes" value={classesCount} icon={GraduationCap} color="bg-purple-100/80 text-purple-600 dark:bg-purple-500/10 dark:text-purple-400" />
+        <StatCard title="School Staff" value={staffCount} icon={Contact} color="bg-pink-100/80 text-pink-600 dark:bg-pink-500/10 dark:text-pink-400" />
+        <StatCard title="Total Paid Fees" value={`$${totalPaidSum.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`} icon={CheckCircle2} color="bg-emerald-100/80 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400" />
+        <StatCard title="Total Unpaid Fees" value={`$${totalUnpaidSum.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`} icon={AlertCircle} color="bg-rose-100/80 text-rose-600 dark:bg-rose-500/10 dark:text-rose-400" />
+        <StatCard title="Paid Coverage" value={`${percentagePaidCoverage}%`} icon={Percent} color="bg-amber-100/80 text-amber-600 dark:bg-amber-500/10 dark:text-amber-400" />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -115,13 +130,13 @@ export default function Dashboard() {
 
 function StatCard({ title, value, icon: Icon, color }: { title: string, value: string | number, icon: any, color: string }) {
   return (
-    <div className="glass-card flex items-center gap-4">
-      <div className={`p-4 rounded-lg bg-opacity-20 dark:bg-opacity-10 backdrop-blur-sm ${color}`}>
-        <Icon className="w-6 h-6" />
+    <div className="glass-card flex items-center gap-3 p-4">
+      <div className={`p-3 rounded-lg bg-opacity-20 dark:bg-opacity-10 backdrop-blur-sm shrink-0 ${color}`}>
+        <Icon className="w-5 h-5" />
       </div>
-      <div>
-        <h4 className="text-sm font-medium text-gray-500">{title}</h4>
-        <div className="text-2xl font-bold text-gray-900 mt-1">{value}</div>
+      <div className="min-w-0">
+        <h4 className="text-[10px] sm:text-xs font-bold text-gray-400 uppercase tracking-wider truncate" title={title}>{title}</h4>
+        <div className="text-sm sm:text-base font-extrabold text-gray-950 mt-0.5 truncate" title={String(value)}>{value}</div>
       </div>
     </div>
   );

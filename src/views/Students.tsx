@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../db';
 import { Search, Plus, X, Upload, Trash2, Edit2, Share2, Download } from 'lucide-react';
@@ -42,34 +42,34 @@ export default function Students() {
         </button>
       </div>
 
-      <div className="bg-white border border-gray-200 rounded-xl overflow-hidden flex-1 flex flex-col shadow-sm">
-        <div className="p-4 border-b border-gray-200 flex items-center gap-3">
+      <div className="table-container">
+        <div className="p-4 border-b border-gray-250 dark:border-cyan-900/20 flex items-center gap-3">
           <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-cyan-500/50 w-5 h-5" />
             <input 
               type="text" 
               placeholder="Search by name or ID..." 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50"
+              className="w-full pl-10 pr-4 py-2 bg-gray-50 dark:bg-slate-950/45 border border-gray-150 dark:border-cyan-900/30 rounded-lg text-gray-950 dark:text-white placeholder-gray-400 dark:placeholder-gray-550 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary"
             />
           </div>
         </div>
         
         <div className="flex-1 overflow-auto">
           <table className="w-full text-left border-collapse">
-            <thead className="bg-gray-50 text-gray-500 text-sm border-b border-gray-200 sticky top-0">
+            <thead className="table-header sticky top-0">
               <tr>
-                <th className="py-3 px-4 font-medium">Name</th>
-                <th className="py-3 px-4 font-medium">ID Number</th>
-                <th className="py-3 px-4 font-medium">Gender</th>
-                <th className="py-3 px-4 font-medium">DOB</th>
+                <th className="py-3 px-4 font-semibold">Name</th>
+                <th className="py-3 px-4 font-semibold">ID Number</th>
+                <th className="py-3 px-4 font-semibold">Gender</th>
+                <th className="py-3 px-4 font-semibold">DOB</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100 text-sm">
+            <tbody className="divide-y divide-gray-100 dark:divide-cyan-900/10 text-sm">
               {students?.length === 0 ? (
                 <tr>
-                  <td colSpan={4} className="py-8 text-center text-gray-500">
+                  <td colSpan={4} className="py-12 text-center text-gray-500 dark:text-cyan-100/40 italic">
                     No students found.
                   </td>
                 </tr>
@@ -78,12 +78,12 @@ export default function Students() {
                   <tr 
                     key={student.id} 
                     onClick={() => setSelectedStudent(student)}
-                    className="hover:bg-gray-50 cursor-pointer transition-colors"
+                    className="table-row cursor-pointer transition-colors"
                   >
-                    <td className="py-3 px-4 font-medium text-gray-900">{student.fullName}</td>
-                    <td className="py-3 px-4 text-gray-600">{student.nationalId}</td>
-                    <td className="py-3 px-4 text-gray-600">{student.gender}</td>
-                    <td className="py-3 px-4 text-gray-600">{student.dob}</td>
+                    <td className="py-3 px-4 font-bold text-gray-950 dark:text-white">{student.fullName}</td>
+                    <td className="py-3 px-4 text-gray-600 dark:text-cyan-100/70">{student.nationalId}</td>
+                    <td className="py-3 px-4 text-gray-600 dark:text-cyan-100/70">{student.gender}</td>
+                    <td className="py-3 px-4 text-gray-600 dark:text-cyan-100/70">{student.dob}</td>
                   </tr>
                 ))
               )}
@@ -114,7 +114,31 @@ export default function Students() {
   );
 }
 
+const SUBJECT_OPTIONS = [
+  'English',
+  'Geography',
+  'Mathematics',
+  'Physics',
+  'Combined Science',
+  'Commerce',
+  'Business Studies',
+  'Accounting',
+  'Ndebele',
+  'Shona',
+  'History',
+  'Chemistry',
+  'Agriculture',
+  'Biology',
+  'Food and Nutrition',
+  'Religious Studies',
+  'Sociology',
+  'Computer Science',
+  'Literature',
+  'Visual Arts'
+];
+
 function StudentModal({ onClose, initialData }: { onClose: () => void, initialData?: Student }) {
+  const settings = getSettings();
   const [fullName, setFullName] = useState(initialData?.fullName || '');
   const [dob, setDob] = useState(initialData?.dob || '');
   const [gender, setGender] = useState<'Male'|'Female'|'Other'>(initialData?.gender || 'Male');
@@ -124,6 +148,7 @@ function StudentModal({ onClose, initialData }: { onClose: () => void, initialDa
   
   const [guardians, setGuardians] = useState<Guardian[]>(initialData?.guardianData?.length ? initialData.guardianData : [{ name: '', relation: '', contact: '', address: '' }]);
   const [classId, setClassId] = useState<string>(initialData?.schoolData?.classId?.toString() || '');
+  const [assignedSubjects, setAssignedSubjects] = useState<string[]>(initialData?.schoolData?.assignedSubjects || []);
   
   const classes = useLiveQuery(() => db.classes.toArray(), []) || [];
 
@@ -161,7 +186,8 @@ function StudentModal({ onClose, initialData }: { onClose: () => void, initialDa
       profilePhoto,
       guardianData: validGuardians, 
       schoolData: {
-        classId: classId ? parseInt(classId) : undefined
+        classId: classId ? parseInt(classId) : undefined,
+        assignedSubjects: settings.systemMode === 'Secondary' ? assignedSubjects : undefined
       }
     };
 
@@ -175,47 +201,47 @@ function StudentModal({ onClose, initialData }: { onClose: () => void, initialDa
 
   return (
     <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
-        <div className="flex items-center justify-between p-4 border-b border-gray-200">
-          <h3 className="font-bold text-lg text-gray-900">Add New Student</h3>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600"><X className="w-5 h-5"/></button>
+      <div className="bg-white dark:bg-slate-900 border dark:border-cyan-900/30 rounded-xl shadow-xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
+        <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-cyan-900/40 bg-gray-50/50 dark:bg-slate-950/20">
+          <h3 className="font-bold text-lg text-gray-950 dark:text-gray-100">Add New Student</h3>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 dark:hover:text-cyan-400"><X className="w-5 h-5"/></button>
         </div>
         <div className="p-6 overflow-y-auto">
           <form id="student-form" onSubmit={handleSave} className="space-y-8">
             {/* Personal Information */}
             <section className="space-y-4">
-              <h4 className="text-sm font-semibold text-gray-900 uppercase tracking-wider border-b border-gray-200 pb-2">Personal Information</h4>
+              <h4 className="text-sm font-semibold text-gray-950 dark:text-cyan-400 uppercase tracking-wider border-b border-gray-200 dark:border-cyan-900/20 pb-2">Personal Information</h4>
               
               <div className="flex gap-6 items-start">
                 {/* Photo Upload */}
                 <div className="flex flex-col items-center gap-2 shrink-0">
-                  <div className="w-24 h-24 bg-gray-100 border-2 border-dashed border-gray-300 rounded-full flex flex-col items-center justify-center overflow-hidden relative group">
+                  <div className="w-24 h-24 bg-gray-100 dark:bg-slate-950/40 border-2 border-dashed border-gray-300 dark:border-cyan-900/30 rounded-full flex flex-col items-center justify-center overflow-hidden relative group">
                     {profilePhoto ? (
                       <img src={profilePhoto} alt="Preview" className="w-full h-full object-cover" />
                     ) : (
-                      <Upload className="w-6 h-6 text-gray-400" />
+                      <Upload className="w-6 h-6 text-gray-400 dark:text-cyan-300/60" />
                     )}
                     <label className="absolute inset-0 bg-black/40 text-white flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity z-10 text-xs font-medium">
                       <span>Upload</span>
                       <input type="file" accept="image/*" onChange={handlePhotoUpload} className="hidden" />
                     </label>
                   </div>
-                  <span className="text-xs text-gray-500">Profile Photo</span>
+                  <span className="text-xs text-gray-500 dark:text-cyan-200/40">Profile Photo</span>
                 </div>
-
+ 
                 <div className="flex-1 space-y-4 min-w-0">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
-                    <input required type="text" value={fullName} onChange={e=>setFullName(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-md" />
+                    <label className="block text-sm font-medium text-gray-700 dark:text-cyan-100/70 mb-1">Full Name</label>
+                    <input required type="text" value={fullName} onChange={e=>setFullName(e.target.value)} className="input-field" />
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Date of Birth</label>
-                      <input required type="date" value={dob} onChange={e=>setDob(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-md" />
+                      <label className="block text-sm font-medium text-gray-700 dark:text-cyan-100/70 mb-1">Date of Birth</label>
+                      <input required type="date" value={dob} onChange={e=>setDob(e.target.value)} className="input-field [color-scheme:light] dark:[color-scheme:dark]" />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Gender</label>
-                      <select value={gender} onChange={e=>setGender(e.target.value as any)} className="w-full px-3 py-2 border border-gray-300 rounded-md">
+                      <label className="block text-sm font-medium text-gray-700 dark:text-cyan-100/70 mb-1">Gender</label>
+                      <select value={gender} onChange={e=>setGender(e.target.value as any)} className="input-field">
                         <option value="Male">Male</option>
                         <option value="Female">Female</option>
                         <option value="Other">Other</option>
@@ -224,42 +250,71 @@ function StudentModal({ onClose, initialData }: { onClose: () => void, initialDa
                   </div>
                 </div>
               </div>
-
+ 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">National ID</label>
-                <input required type="text" value={nationalId} onChange={e=>setNationalId(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-md" />
+                <label className="block text-sm font-medium text-gray-700 dark:text-cyan-100/70 mb-1">National ID</label>
+                <input required type="text" value={nationalId} onChange={e=>setNationalId(e.target.value)} className="input-field" />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Physical Address</label>
-                <textarea required value={physicalAddress} onChange={e=>setPhysicalAddress(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-md" rows={2} />
+                <label className="block text-sm font-medium text-gray-700 dark:text-cyan-100/70 mb-1">Physical Address</label>
+                <textarea required value={physicalAddress} onChange={e=>setPhysicalAddress(e.target.value)} className="input-field" rows={2} />
               </div>
             </section>
-
+ 
             {/* School Details */}
             <section className="space-y-4">
-              <h4 className="text-sm font-semibold text-gray-900 uppercase tracking-wider border-b border-gray-200 pb-2">School Details</h4>
+              <h4 className="text-sm font-semibold text-gray-950 dark:text-cyan-400 uppercase tracking-wider border-b border-gray-200 dark:border-cyan-900/20 pb-2">School Details</h4>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Assign Class</label>
-                <select value={classId} onChange={e=>setClassId(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-md">
+                <label className="block text-sm font-medium text-gray-700 dark:text-cyan-100/70 mb-1">Assign Class</label>
+                <select value={classId} onChange={e=>setClassId(e.target.value)} className="input-field">
                   <option value="">No Class Assigned</option>
                   {classes.map(cls => (
                     <option key={cls.id} value={cls.id}>{cls.name}</option>
                   ))}
                 </select>
               </div>
+ 
+              {settings.systemMode === 'Secondary' && (
+                <div className="pt-2">
+                  <label className="block text-sm font-semibold text-gray-750 dark:text-cyan-100/90 mb-2">Assign Secondary Subjects</label>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-2 max-h-48 overflow-y-auto p-3 border border-gray-200 dark:border-cyan-900/30 rounded-lg bg-gray-50/55 dark:bg-slate-950/20">
+                    {SUBJECT_OPTIONS.map(subj => {
+                      const isChecked = assignedSubjects.includes(subj);
+                      return (
+                        <label key={subj} className="flex items-center gap-2 cursor-pointer p-1.5 hover:bg-gray-150/50 dark:hover:bg-slate-800/50 rounded text-xs select-none">
+                          <input
+                            type="checkbox"
+                            checked={isChecked}
+                            onChange={() => {
+                              if (isChecked) {
+                                setAssignedSubjects(assignedSubjects.filter(s => s !== subj));
+                              } else {
+                                setAssignedSubjects([...assignedSubjects, subj]);
+                              }
+                            }}
+                            className="rounded border-gray-300 dark:border-cyan-900/40 text-primary focus:ring-primary h-4 w-4"
+                          />
+                          <span className="text-gray-700 dark:text-cyan-100/85 font-medium">{subj}</span>
+                        </label>
+                      );
+                    })}
+                  </div>
+                  <span className="text-xs text-gray-400 dark:text-cyan-200/40 mt-1 block">Checked subjects will be assigned to this secondary student.</span>
+                </div>
+              )}
             </section>
-
+ 
             {/* Guardian Data */}
             <section className="space-y-4">
-              <div className="flex justify-between items-center border-b border-gray-200 pb-2">
-                <h4 className="text-sm font-semibold text-gray-900 uppercase tracking-wider">Guardian Data</h4>
-                <button type="button" onClick={addGuardian} className="text-sm text-primary font-medium flex items-center gap-1 hover:underline">
+              <div className="flex justify-between items-center border-b border-gray-200 dark:border-cyan-900/20 pb-2">
+                <h4 className="text-sm font-semibold text-gray-950 dark:text-cyan-400 uppercase tracking-wider">Guardian Data</h4>
+                <button type="button" onClick={addGuardian} className="text-sm text-primary dark:text-cyan-400 font-semibold flex items-center gap-1 hover:underline">
                   <Plus className="w-4 h-4" /> Add Guardian
                 </button>
               </div>
               
               {guardians.map((guardian, index) => (
-                <div key={index} className="p-4 bg-gray-50 rounded-lg border border-gray-200 space-y-4 relative">
+                <div key={index} className="p-4 bg-gray-50 dark:bg-slate-950/20 rounded-lg border border-gray-200 dark:border-cyan-900/30 space-y-4 relative">
                   {guardians.length > 1 && (
                     <button type="button" onClick={() => removeGuardian(index)} className="absolute top-2 right-2 text-gray-400 hover:text-red-500">
                       <Trash2 className="w-4 h-4" />
@@ -267,22 +322,22 @@ function StudentModal({ onClose, initialData }: { onClose: () => void, initialDa
                   )}
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Guardian Name</label>
-                      <input required type="text" value={guardian.name} onChange={e=>handleGuardianChange(index, 'name', e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white" />
+                      <label className="block text-sm font-medium text-gray-750 dark:text-cyan-100/70 mb-1">Guardian Name</label>
+                      <input required type="text" value={guardian.name} onChange={e=>handleGuardianChange(index, 'name', e.target.value)} className="input-field" />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Relation</label>
-                      <input required type="text" placeholder="e.g. Mother, Father" value={guardian.relation} onChange={e=>handleGuardianChange(index, 'relation', e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white" />
+                      <label className="block text-sm font-medium text-gray-750 dark:text-cyan-100/70 mb-1">Relation</label>
+                      <input required type="text" placeholder="e.g. Mother, Father" value={guardian.relation} onChange={e=>handleGuardianChange(index, 'relation', e.target.value)} className="input-field" />
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Contact Number</label>
-                      <input required type="text" value={guardian.contact} onChange={e=>handleGuardianChange(index, 'contact', e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white" />
+                      <label className="block text-sm font-medium text-gray-750 dark:text-cyan-100/70 mb-1">Contact Number</label>
+                      <input required type="text" value={guardian.contact} onChange={e=>handleGuardianChange(index, 'contact', e.target.value)} className="input-field" />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Physical Address</label>
-                      <input required type="text" value={guardian.address} onChange={e=>handleGuardianChange(index, 'address', e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white" />
+                      <label className="block text-sm font-medium text-gray-750 dark:text-cyan-100/70 mb-1">Physical Address</label>
+                      <input required type="text" value={guardian.address} onChange={e=>handleGuardianChange(index, 'address', e.target.value)} className="input-field" />
                     </div>
                   </div>
                 </div>
@@ -290,9 +345,9 @@ function StudentModal({ onClose, initialData }: { onClose: () => void, initialDa
             </section>
           </form>
         </div>
-        <div className="p-4 border-t border-gray-200 bg-gray-50 flex justify-end gap-3 shrink-0">
-          <button onClick={onClose} type="button" className="px-4 py-2 text-gray-600 font-medium hover:bg-gray-200 rounded-lg transition-colors">Cancel</button>
-          <button form="student-form" type="submit" className="px-4 py-2 bg-primary text-white font-medium rounded-lg hover:bg-primary/90 transition-colors">Save Student</button>
+        <div className="p-4 border-t border-gray-200 dark:border-cyan-900/30 bg-gray-50 dark:bg-slate-950/20 flex justify-end gap-3 shrink-0">
+          <button onClick={onClose} type="button" className="px-4 py-2 text-gray-650 dark:text-cyan-150/70 font-medium hover:bg-gray-200 dark:hover:bg-slate-800 rounded-lg transition-colors">Cancel</button>
+          <button form="student-form" type="submit" className="px-4 py-2 bg-primary text-white font-semibold rounded-lg hover:bg-primary/90 transition-colors shadow-sm">Save Student</button>
         </div>
       </div>
     </div>
@@ -375,10 +430,19 @@ function StudentDetailsModal({ student, onClose, onEdit }: { student: Student, o
             </div>
           </div>
 
-          <div class="section">
+           <div class="section">
             <h2>School Data</h2>
             <div class="grid">
               <div><div class="label">Assigned Class</div><div class="value">${assignedClass?.name || 'Not Assigned'}</div></div>
+              ${settings.systemMode === 'Secondary' ? `
+                <div style="grid-column: 1 / -1; margin-top: 10px;">
+                  <div class="label">Assigned Subjects</div>
+                  <div style="display: flex; flex-wrap: wrap; gap: 5px; margin-top: 5px;">
+                    ${(student.schoolData?.assignedSubjects || []).map(subj => `<span style="background: #E0F2FE; color: ${settings.themeColor}; padding: 3px 8px; border-radius: 4px; font-size: 12px; font-weight: 500;">${subj}</span>`).join('')}
+                    ${(!student.schoolData?.assignedSubjects || student.schoolData.assignedSubjects.length === 0) ? '<span style="color: #999; font-style: italic;">None Assigned</span>' : ''}
+                  </div>
+                </div>
+              ` : ''}
             </div>
           </div>
 
@@ -409,73 +473,96 @@ function StudentDetailsModal({ student, onClose, onEdit }: { student: Student, o
 
   return (
     <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
-        <div className="flex justify-between items-start p-6 border-b border-gray-200">
+      <div className="bg-white dark:bg-slate-900 border dark:border-cyan-900/30 rounded-xl shadow-xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
+        <div className="flex justify-between items-start p-6 border-b border-gray-200 dark:border-cyan-900/30 bg-gray-50/50 dark:bg-slate-950/20">
           <div className="flex gap-4 items-center">
-            <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center overflow-hidden shrink-0 border border-gray-300">
+            <div className="w-16 h-16 bg-gray-200 dark:bg-slate-950/40 rounded-full flex items-center justify-center overflow-hidden shrink-0 border border-gray-300 dark:border-cyan-900/30">
               {student.profilePhoto ? (
                 <img src={student.profilePhoto} alt="Profile" className="w-full h-full object-cover" />
               ) : (
-                <span className="text-2xl text-gray-500 font-bold">{student.fullName.charAt(0)}</span>
+                <span className="text-2xl text-gray-500 dark:text-cyan-300 font-bold">{student.fullName.charAt(0)}</span>
               )}
             </div>
             <div>
-              <h2 className="text-2xl font-bold text-gray-900">{student.fullName}</h2>
-              <p className="text-gray-500">{student.nationalId}</p>
+              <h2 className="text-2xl font-bold text-gray-950 dark:text-white">{student.fullName}</h2>
+              <p className="text-sm text-gray-500 dark:text-cyan-100/50">National ID: {student.nationalId}</p>
             </div>
           </div>
           
           <div className="flex items-center gap-2">
-            <button onClick={onEdit} className="p-2 text-gray-400 hover:text-primary bg-gray-50 hover:bg-primary/10 rounded-full transition-colors" title="Edit Student">
-              <Edit2 className="w-5 h-5"/>
+            <button onClick={onEdit} className="p-2 text-gray-450 dark:text-cyan-200 hover:text-primary dark:hover:text-cyan-400 bg-gray-100 dark:bg-slate-800 rounded-full transition-colors" title="Edit Student">
+              <Edit2 className="w-4 h-4"/>
             </button>
-            <button onClick={handleShare} className="p-2 text-gray-400 hover:text-primary bg-gray-50 hover:bg-primary/10 rounded-full transition-colors" title="Share Student Record">
-              <Share2 className="w-5 h-5"/>
+            <button onClick={handleShare} className="p-2 text-gray-450 dark:text-cyan-200 hover:text-primary dark:hover:text-cyan-400 bg-gray-100 dark:bg-slate-800 rounded-full transition-colors" title="Share Student Record">
+              <Share2 className="w-4 h-4"/>
             </button>
-            <button onClick={generatePDF} className="p-2 text-gray-400 hover:text-primary bg-gray-50 hover:bg-primary/10 rounded-full transition-colors" title="Download PDF">
-              <Download className="w-5 h-5"/>
+            <button onClick={generatePDF} className="p-2 text-gray-450 dark:text-cyan-200 hover:text-primary dark:hover:text-cyan-400 bg-gray-100 dark:bg-slate-800 rounded-full transition-colors" title="Download PDF">
+              <Download className="w-4 h-4"/>
             </button>
-            <button onClick={handleDelete} className="p-2 text-gray-400 hover:text-red-600 bg-gray-50 hover:bg-red-50 rounded-full transition-colors" title="Delete Student">
-              <Trash2 className="w-5 h-5"/>
+            <button onClick={handleDelete} className="p-2 text-gray-450 dark:text-red-400 hover:text-red-650 bg-gray-100 dark:bg-slate-800 hover:bg-red-50 dark:hover:bg-red-950/50 rounded-full transition-colors" title="Delete Student">
+              <Trash2 className="w-4 h-4"/>
             </button>
-            <div className="w-px h-6 bg-gray-200 mx-1"></div>
-            <button onClick={onClose} className="p-2 text-gray-400 hover:text-gray-600 bg-gray-50 hover:bg-gray-100 rounded-full transition-colors">
-              <X className="w-5 h-5"/>
+            <div className="w-px h-6 bg-gray-200 dark:bg-cyan-900/45 mx-1"></div>
+            <button onClick={onClose} className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-cyan-400 bg-gray-100 dark:bg-slate-800 rounded-full transition-colors">
+              <X className="w-4 h-4"/>
             </button>
           </div>
         </div>
         
         <div className="p-6 overflow-y-auto space-y-8">
           <section>
-            <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wider mb-4 border-b border-gray-200 pb-2">Personal Information</h3>
+            <h3 className="text-sm font-semibold text-gray-950 dark:text-cyan-400 uppercase tracking-wider mb-4 border-b border-gray-200 dark:border-cyan-900/20 pb-2">Personal Information</h3>
             <div className="grid grid-cols-2 gap-y-4 gap-x-8 text-sm">
-              <div><span className="block text-gray-500 mb-1">Date of Birth</span><span className="font-medium">{student.dob}</span></div>
-              <div><span className="block text-gray-500 mb-1">Gender</span><span className="font-medium">{student.gender}</span></div>
-              <div className="col-span-2"><span className="block text-gray-500 mb-1">Physical Address</span><span className="font-medium">{student.physicalAddress}</span></div>
+              <div><span className="block text-xs font-bold text-gray-400 dark:text-cyan-100/40 uppercase tracking-wider mb-1">Date of Birth</span><span className="font-semibold text-gray-955 dark:text-cyan-100/90">{student.dob}</span></div>
+              <div><span className="block text-xs font-bold text-gray-400 dark:text-cyan-100/40 uppercase tracking-wider mb-1">Gender</span><span className="font-semibold text-gray-955 dark:text-cyan-100/90">{student.gender}</span></div>
+              <div className="col-span-2"><span className="block text-xs font-bold text-gray-400 dark:text-cyan-100/40 uppercase tracking-wider mb-1">Physical Address</span><span className="font-semibold text-gray-955 dark:text-cyan-100/90">{student.physicalAddress}</span></div>
             </div>
           </section>
-
+ 
           <section>
-            <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wider mb-4 border-b border-gray-200 pb-2">Guardian Data</h3>
+            <h3 className="text-sm font-semibold text-gray-950 dark:text-cyan-400 uppercase tracking-wider mb-4 border-b border-gray-200 dark:border-cyan-900/20 pb-2">Guardian Data</h3>
             {student.guardianData.length === 0 ? (
-              <p className="text-sm text-gray-500 italic">No guardians recorded.</p>
+              <p className="text-sm text-gray-550 dark:text-cyan-200/40 italic">No guardians recorded.</p>
             ) : (
               <div className="space-y-4">
                 {student.guardianData.map((g, i) => (
-                  <div key={i} className="bg-gray-50 p-4 rounded-lg flex flex-col gap-1 text-sm">
-                    <div className="flex justify-between font-medium"><span>{g.name}</span><span className="text-primary">{g.relation}</span></div>
-                    <div className="text-gray-600">{g.contact}</div>
-                    <div className="text-gray-600">{g.address}</div>
+                  <div key={i} className="bg-gray-50 dark:bg-slate-950/20 border border-gray-150 dark:border-cyan-900/20 p-4 rounded-lg flex flex-col gap-1 text-sm">
+                    <div className="flex justify-between font-bold text-gray-900 dark:text-white">
+                      <span>{g.name}</span>
+                      <span className="text-primary dark:text-cyan-400 text-xs px-2.5 py-0.5 rounded-full bg-primary/5 dark:bg-cyan-500/10 font-bold uppercase">{g.relation}</span>
+                    </div>
+                    <div className="text-gray-650 dark:text-cyan-100/70 mt-1 font-medium"><span className="text-xs text-gray-400 dark:text-cyan-200/40 font-bold block uppercase">Phone Contact</span>{g.contact}</div>
+                    <div className="text-gray-650 dark:text-cyan-100/70 mt-1 font-medium"><span className="text-xs text-gray-400 dark:text-cyan-200/40 font-bold block uppercase font-medium">Residence Address</span>{g.address}</div>
                   </div>
                 ))}
               </div>
             )}
           </section>
-
+ 
           <section>
-            <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wider mb-4 border-b border-gray-200 pb-2">School Data</h3>
-            <div className="text-sm space-y-2">
-              <p className="text-gray-500">Class: <span className="font-medium text-gray-900">{assignedClass?.name || 'Not Assigned'}</span></p>
+            <h3 className="text-sm font-semibold text-gray-955 dark:text-cyan-400 uppercase tracking-wider mb-4 border-b border-gray-200 dark:border-cyan-900/20 pb-2">School Data</h3>
+            <div className="text-sm space-y-4">
+              <div className="bg-gray-50 dark:bg-slate-950/20 border border-gray-150 dark:border-cyan-900/20 p-4 rounded-lg">
+                <span className="text-xs font-bold text-gray-400 dark:text-cyan-200/40 uppercase tracking-wider block mb-1">Assigned Class</span>
+                <span className="font-bold text-base text-gray-950 dark:text-white">{assignedClass?.name || 'Not Assigned'}</span>
+              </div>
+              
+              {settings.systemMode === 'Secondary' && (
+                <div>
+                  <span className="block text-xs font-bold text-gray-400 dark:text-cyan-200/40 uppercase tracking-wider mb-2">Assigned Subjects</span>
+                  {(!student.schoolData?.assignedSubjects || student.schoolData.assignedSubjects.length === 0) ? (
+                    <span className="text-gray-400 dark:text-cyan-200/40 italic font-medium">No subjects assigned yet.</span>
+                  ) : (
+                    <div className="flex flex-wrap gap-1.5 mt-1">
+                      {student.schoolData.assignedSubjects.map(subj => (
+                        <span key={subj} className="bg-primary/5 dark:bg-cyan-500/10 text-primary dark:text-cyan-400 border border-primary/20 dark:border-cyan-500/20 px-2.5 py-1 rounded-md text-xs font-bold">
+                          {subj}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </section>
         </div>

@@ -7,6 +7,7 @@ import Classes from './views/Classes';
 import Fees from './views/Fees';
 import Noticeboard from './views/Noticeboard';
 import Settings from './views/Settings';
+import StaffView from './views/Staff';
 
 export default function App() {
   const [currentView, setCurrentView] = useState<ViewType>('dashboard');
@@ -32,6 +33,7 @@ export default function App() {
       case 'dashboard': return <Dashboard />;
       case 'students': return <Students />;
       case 'classes': return <Classes />;
+      case 'staff': return <StaffView />;
       case 'fees': return <Fees />;
       case 'notices': return <Noticeboard />;
       case 'settings': return <Settings />;

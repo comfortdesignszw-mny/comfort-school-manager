@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
-import { LayoutDashboard, Users, GraduationCap, Banknote, ClipboardList, Settings as SettingsIcon, Sun, Moon } from 'lucide-react';
+import { LayoutDashboard, Users, GraduationCap, Banknote, ClipboardList, Settings as SettingsIcon, Sun, Moon, Contact } from 'lucide-react';
 import { getSettings } from '../db';
 import type { AppSettings } from '../types';
 
-export type ViewType = 'dashboard' | 'students' | 'classes' | 'fees' | 'notices' | 'settings';
+export type ViewType = 'dashboard' | 'students' | 'classes' | 'fees' | 'notices' | 'settings' | 'staff';
 
 interface SidebarProps {
   currentView: ViewType;
@@ -28,7 +28,8 @@ export default function Sidebar({ currentView, onChangeView, isOpen, onClose, to
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'students', label: 'Students', icon: Users },
     { id: 'classes', label: 'Classes', icon: GraduationCap },
-    { id: 'fees', label: 'Fees', icon: Banknote },
+    { id: 'staff', label: 'Staff Section', icon: Contact },
+    { id: 'fees', label: 'Fees Ledger', icon: Banknote },
     { id: 'notices', label: 'Noticeboard', icon: ClipboardList },
     { id: 'settings', label: 'Settings', icon: SettingsIcon },
   ] as const;
