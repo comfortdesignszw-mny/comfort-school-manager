@@ -84,10 +84,10 @@ export default function Sidebar({ currentView, onChangeView, isOpen, onClose, to
                       onClose();
                     }}
                     className={`
-                      w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
+                      w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-300
                       ${isActive 
-                        ? 'bg-primary/10 text-primary dark:bg-cyan-500/20 dark:text-cyan-400' 
-                        : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-slate-800 dark:hover:text-gray-100'}
+                        ? 'bg-primary/10 text-primary dark:bg-cyan-500/20 dark:text-cyan-400 translate-x-1' 
+                        : 'text-gray-600 hover:bg-gray-100 hover:translate-x-1 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-slate-800 dark:hover:text-gray-100'}
                     `}
                   >
                     <Icon className="w-5 h-5" />

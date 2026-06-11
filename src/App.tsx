@@ -131,8 +131,10 @@ export default function App() {
 
         <div className="flex-1 overflow-auto p-4 md:p-6 lg:p-8 flex flex-col">
           <div className="max-w-7xl mx-auto w-full flex-1 flex flex-col justify-between">
-            <div className="w-full flex-1">
-              {renderView()}
+            <div className="w-full flex-1 relative">
+              <div key={currentView} className="animate-view-enter h-full">
+                {renderView()}
+              </div>
             </div>
 
             {/* Global Styled Footnote */}

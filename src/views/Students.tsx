@@ -271,8 +271,8 @@ function StudentModal({ onClose, initialData }: { onClose: () => void, initialDa
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-      <div className="bg-white dark:bg-slate-900 border dark:border-cyan-900/30 rounded-xl shadow-xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
+    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={onClose}>
+      <div className="bg-white dark:bg-slate-900 border dark:border-cyan-900/30 rounded-xl shadow-xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]" onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-cyan-900/40 bg-gray-50/50 dark:bg-slate-950/20">
           <h3 className="font-bold text-lg text-gray-950 dark:text-gray-100">Add New Student</h3>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600 dark:hover:text-cyan-400"><X className="w-5 h-5"/></button>
@@ -778,8 +778,8 @@ function StudentDetailsModal({ student, onClose, onEdit }: { student: Student, o
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-      <div className="bg-white dark:bg-slate-900 border dark:border-cyan-900/30 rounded-xl shadow-xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
+    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={onClose}>
+      <div className="bg-white dark:bg-slate-900 border dark:border-cyan-900/30 rounded-xl shadow-xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]" onClick={e => e.stopPropagation()}>
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-6 border-b border-gray-200 dark:border-cyan-900/30 bg-gray-50/50 dark:bg-slate-950/20 relative gap-4">
           <div className="flex gap-4 items-center pr-8 sm:pr-0 width-full">
             <div className="w-16 h-16 bg-gray-200 dark:bg-slate-950/40 rounded-full flex items-center justify-center overflow-hidden shrink-0 border border-gray-300 dark:border-cyan-900/30">
@@ -795,11 +795,11 @@ function StudentDetailsModal({ student, onClose, onEdit }: { student: Student, o
             </div>
           </div>
           
-          <button onClick={onClose} className="absolute top-6 right-6 p-2 text-gray-400 hover:text-gray-600 dark:hover:text-cyan-400 bg-gray-200 dark:bg-slate-800 rounded-full transition-colors sm:hidden z-10 hover:bg-gray-300 shadow-sm">
+          <button onClick={onClose} className="absolute top-6 right-6 p-2 text-gray-400 hover:text-gray-600 dark:hover:text-cyan-400 bg-gray-200 dark:bg-slate-800 rounded-full transition-colors z-10 hover:bg-gray-300 shadow-sm cursor-pointer">
             <X className="w-4 h-4"/>
           </button>
           
-          <div className="flex items-center gap-2 flex-wrap w-full sm:w-auto mt-2 sm:mt-0">
+          <div className="flex items-center gap-2 flex-wrap w-full sm:w-auto mt-4 sm:mt-0 pt-4 sm:pt-0 border-t sm:border-0 border-gray-200 dark:border-cyan-900/30">
             <Tooltip content="Edit student details & assignments">
               <button onClick={onEdit} className="p-2.5 sm:p-2 text-gray-700 dark:text-cyan-200 hover:text-primary dark:hover:text-cyan-400 bg-white sm:bg-gray-100 dark:bg-slate-800 border sm:border-none border-gray-200 dark:border-cyan-900/40 rounded-xl sm:rounded-full transition-all shadow-sm sm:shadow-none min-w-[44px] flex justify-center cursor-pointer" title="Edit Student">
                 <Edit2 className="w-5 h-5 sm:w-4 sm:h-4"/>
@@ -825,10 +825,6 @@ function StudentDetailsModal({ student, onClose, onEdit }: { student: Student, o
                 <Trash2 className="w-5 h-5 sm:w-4 sm:h-4"/>
               </button>
             </Tooltip>
-            <div className="hidden sm:block w-px h-6 bg-gray-200 dark:bg-cyan-900/45 mx-1"></div>
-            <button onClick={onClose} className="p-2 hidden sm:block text-gray-400 hover:text-gray-600 dark:hover:text-cyan-400 bg-gray-100 dark:bg-slate-800 rounded-full transition-colors cursor-pointer">
-              <X className="w-4 h-4"/>
-            </button>
           </div>
         </div>
         
