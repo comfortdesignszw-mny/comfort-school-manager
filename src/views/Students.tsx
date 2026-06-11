@@ -780,8 +780,8 @@ function StudentDetailsModal({ student, onClose, onEdit }: { student: Student, o
   return (
     <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
       <div className="bg-white dark:bg-slate-900 border dark:border-cyan-900/30 rounded-xl shadow-xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
-        <div className="flex justify-between items-start p-6 border-b border-gray-200 dark:border-cyan-900/30 bg-gray-50/50 dark:bg-slate-950/20">
-          <div className="flex gap-4 items-center">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-6 border-b border-gray-200 dark:border-cyan-900/30 bg-gray-50/50 dark:bg-slate-950/20 relative gap-4">
+          <div className="flex gap-4 items-center pr-8 sm:pr-0 width-full">
             <div className="w-16 h-16 bg-gray-200 dark:bg-slate-950/40 rounded-full flex items-center justify-center overflow-hidden shrink-0 border border-gray-300 dark:border-cyan-900/30">
               {student.profilePhoto ? (
                 <img src={student.profilePhoto} alt="Profile" className="w-full h-full object-cover" />
@@ -790,39 +790,43 @@ function StudentDetailsModal({ student, onClose, onEdit }: { student: Student, o
               )}
             </div>
             <div>
-              <h2 className="text-2xl font-bold text-gray-950 dark:text-white">{student.fullName}</h2>
-              <p className="text-sm text-gray-500 dark:text-cyan-100/50">Student ID: {student.nationalId}</p>
+              <h2 className="text-xl sm:text-2xl font-bold text-gray-950 dark:text-white leading-tight">{student.fullName}</h2>
+              <p className="text-sm text-gray-500 dark:text-cyan-100/50">Student ID: {student.nationalId || 'N/A'}</p>
             </div>
           </div>
           
-          <div className="flex items-center gap-2">
+          <button onClick={onClose} className="absolute top-6 right-6 p-2 text-gray-400 hover:text-gray-600 dark:hover:text-cyan-400 bg-gray-200 dark:bg-slate-800 rounded-full transition-colors sm:hidden z-10 hover:bg-gray-300 shadow-sm">
+            <X className="w-4 h-4"/>
+          </button>
+          
+          <div className="flex items-center gap-2 flex-wrap w-full sm:w-auto mt-2 sm:mt-0">
             <Tooltip content="Edit student details & assignments">
-              <button onClick={onEdit} className="p-2 text-gray-450 dark:text-cyan-200 hover:text-primary dark:hover:text-cyan-400 bg-gray-100 dark:bg-slate-800 rounded-full transition-colors cursor-pointer" title="Edit Student">
-                <Edit2 className="w-4 h-4"/>
+              <button onClick={onEdit} className="p-2.5 sm:p-2 text-gray-700 dark:text-cyan-200 hover:text-primary dark:hover:text-cyan-400 bg-white sm:bg-gray-100 dark:bg-slate-800 border sm:border-none border-gray-200 dark:border-cyan-900/40 rounded-xl sm:rounded-full transition-all shadow-sm sm:shadow-none min-w-[44px] flex justify-center cursor-pointer" title="Edit Student">
+                <Edit2 className="w-5 h-5 sm:w-4 sm:h-4"/>
               </button>
             </Tooltip>
             <Tooltip content="Copy student sharing text summary">
-              <button onClick={handleShare} className="p-2 text-gray-450 dark:text-cyan-200 hover:text-primary dark:hover:text-cyan-400 bg-gray-100 dark:bg-slate-800 rounded-full transition-colors cursor-pointer" title="Share Student Record">
-                <Share2 className="w-4 h-4"/>
+              <button onClick={handleShare} className="p-2.5 sm:p-2 text-gray-700 dark:text-cyan-200 hover:text-primary dark:hover:text-cyan-400 bg-white sm:bg-gray-100 dark:bg-slate-800 border sm:border-none border-gray-200 dark:border-cyan-900/40 rounded-xl sm:rounded-full transition-all shadow-sm sm:shadow-none min-w-[44px] flex justify-center cursor-pointer" title="Share Student Record">
+                <Share2 className="w-5 h-5 sm:w-4 sm:h-4"/>
               </button>
             </Tooltip>
             <Tooltip content="Download Printable ID Card Card">
-              <button onClick={generateIDCard} className="p-2 text-gray-450 dark:text-cyan-200 hover:text-primary dark:hover:text-cyan-400 bg-gray-100 dark:bg-slate-800 rounded-full transition-colors cursor-pointer" title="Download ID Card">
-                <CreditCard className="w-4 h-4"/>
+              <button onClick={generateIDCard} className="p-2.5 sm:p-2 text-gray-700 dark:text-cyan-200 hover:text-primary dark:hover:text-cyan-400 bg-white sm:bg-gray-100 dark:bg-slate-800 border sm:border-none border-gray-200 dark:border-cyan-900/40 rounded-xl sm:rounded-full transition-all shadow-sm sm:shadow-none min-w-[44px] flex justify-center cursor-pointer" title="Download ID Card">
+                <CreditCard className="w-5 h-5 sm:w-4 sm:h-4"/>
               </button>
             </Tooltip>
             <Tooltip content="Export full profile as PDF report">
-              <button onClick={generatePDF} className="p-2 text-gray-450 dark:text-cyan-200 hover:text-primary dark:hover:text-cyan-400 bg-gray-100 dark:bg-slate-800 rounded-full transition-colors cursor-pointer" title="Download PDF">
-                <Download className="w-4 h-4"/>
+              <button onClick={generatePDF} className="p-2.5 sm:p-2 text-gray-700 dark:text-cyan-200 hover:text-primary dark:hover:text-cyan-400 bg-white sm:bg-gray-100 dark:bg-slate-800 border sm:border-none border-gray-200 dark:border-cyan-900/40 rounded-xl sm:rounded-full transition-all shadow-sm sm:shadow-none min-w-[44px] flex justify-center cursor-pointer" title="Download PDF">
+                <Download className="w-5 h-5 sm:w-4 sm:h-4"/>
               </button>
             </Tooltip>
             <Tooltip content="Delete student record permanently">
-              <button onClick={handleDelete} className="p-2 text-gray-450 dark:text-red-400 hover:text-red-650 bg-gray-100 dark:bg-slate-800 hover:bg-red-50 dark:hover:bg-red-950/50 rounded-full transition-colors cursor-pointer" title="Delete Student">
-                <Trash2 className="w-4 h-4"/>
+              <button onClick={handleDelete} className="p-2.5 sm:p-2 text-gray-700 dark:text-red-400 hover:text-red-650 bg-white sm:bg-gray-100 dark:bg-slate-800 hover:bg-red-50 sm:hover:bg-red-50 dark:hover:bg-red-950/50 border sm:border-none border-gray-200 dark:border-red-900/30 rounded-xl sm:rounded-full transition-all shadow-sm sm:shadow-none min-w-[44px] flex justify-center cursor-pointer" title="Delete Student">
+                <Trash2 className="w-5 h-5 sm:w-4 sm:h-4"/>
               </button>
             </Tooltip>
-            <div className="w-px h-6 bg-gray-200 dark:bg-cyan-900/45 mx-1"></div>
-            <button onClick={onClose} className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-cyan-400 bg-gray-100 dark:bg-slate-800 rounded-full transition-colors">
+            <div className="hidden sm:block w-px h-6 bg-gray-200 dark:bg-cyan-900/45 mx-1"></div>
+            <button onClick={onClose} className="p-2 hidden sm:block text-gray-400 hover:text-gray-600 dark:hover:text-cyan-400 bg-gray-100 dark:bg-slate-800 rounded-full transition-colors cursor-pointer">
               <X className="w-4 h-4"/>
             </button>
           </div>
