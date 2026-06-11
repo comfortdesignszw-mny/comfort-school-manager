@@ -3,6 +3,7 @@ import { db } from '../db';
 import { Users, GraduationCap, BookOpen, Banknote, CheckCircle2, AlertCircle, Percent, Contact } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import DashboardCalendar from '../components/DashboardCalendar';
+import SystemHealth from '../components/SystemHealth';
 
 export default function Dashboard() {
   const studentsCount = useLiveQuery(() => db.students.count(), []) || 0;
@@ -124,6 +125,10 @@ export default function Dashboard() {
             <p className="text-sm text-gray-500 italic">No recent notices available.</p>
           )}
         </div>
+      </div>
+
+      <div className="mt-6">
+        <SystemHealth />
       </div>
 
       <div className="mt-6">
