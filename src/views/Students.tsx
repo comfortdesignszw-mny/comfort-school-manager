@@ -103,7 +103,7 @@ export default function Students() {
                 <thead className="table-header sticky top-0">
                   <tr>
                     <th className="py-3 px-4 font-semibold">Name</th>
-                    <th className="py-3 px-4 font-semibold">ID Number</th>
+                    <th className="py-3 px-4 font-semibold">Student ID</th>
                     <th className="py-3 px-4 font-semibold">Gender</th>
                     <th className="py-3 px-4 font-semibold">DOB</th>
                   </tr>
@@ -199,6 +199,23 @@ function StudentModal({ onClose, initialData }: { onClose: () => void, initialDa
   const [nationalId, setNationalId] = useState(initialData?.nationalId || '');
   const [physicalAddress, setPhysicalAddress] = useState(initialData?.physicalAddress || '');
   const [profilePhoto, setProfilePhoto] = useState<string>(initialData?.profilePhoto || '');
+  
+  React.useEffect(() => {
+    if (!initialData?.nationalId) {
+      db.students.toArray().then(students => {
+        let maxId = 0;
+        students.forEach(s => {
+          const match = s.nationalId?.match(/^STU-(\d+)$/i);
+          if (match) {
+            const num = parseInt(match[1], 10);
+            if (num > maxId) maxId = num;
+          }
+        });
+        const nextId = `STU-${String(maxId + 1).padStart(5, '0')}`;
+        setNationalId(nextId);
+      });
+    }
+  }, [initialData]);
   
   const [guardians, setGuardians] = useState<Guardian[]>(initialData?.guardianData?.length ? initialData.guardianData : [{ name: '', relation: '', contact: '', address: '' }]);
   const [classId, setClassId] = useState<string>(initialData?.schoolData?.classId?.toString() || '');
@@ -306,7 +323,7 @@ function StudentModal({ onClose, initialData }: { onClose: () => void, initialDa
               </div>
  
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-cyan-100/70 mb-1">National ID</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-cyan-100/70 mb-1">Student ID</label>
                 <input required type="text" value={nationalId} onChange={e=>setNationalId(e.target.value)} className="input-field" />
               </div>
               <div>
@@ -427,7 +444,7 @@ function StudentDetailsModal({ student, onClose, onEdit }: { student: Student, o
       if (navigator.share) {
         await navigator.share({
           title: `Student: ${student.fullName}`,
-          text: `Student Details:\nName: ${student.fullName}\nID: ${student.nationalId}\nClass: ${assignedClass?.name || 'Unassigned'}`,
+          text: `Student Details:\nName: ${student.fullName}\nStudent ID: ${student.nationalId}\nClass: ${assignedClass?.name || 'Unassigned'}`,
         });
       } else {
         alert('Sharing is not supported on this browser.');
@@ -472,7 +489,7 @@ function StudentDetailsModal({ student, onClose, onEdit }: { student: Student, o
           <div style="text-align: center;">
              ${student.profilePhoto ? `<img src="${student.profilePhoto}" class="prof-photo" />` : ''}
              <h2 style="font-size: 28px; margin: 0 0 5px 0;">${student.fullName}</h2>
-             <p style="margin: 0 0 20px 0; color: #666; font-size: 16px;">ID: ${student.nationalId}</p>
+             <p style="margin: 0 0 20px 0; color: #666; font-size: 16px;">Student ID: ${student.nationalId}</p>
           </div>
 
           <div class="section">
@@ -532,62 +549,226 @@ function StudentDetailsModal({ student, onClose, onEdit }: { student: Student, o
         <head>
           <title>${student.fullName} - ID Card</title>
           <style>
-            body { font-family: system-ui, -apple-system, sans-serif; padding: 20px; display: flex; justify-content: center; }
+            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
+            
+            body { 
+              font-family: 'Inter', system-ui, -apple-system, sans-serif; 
+              padding: 20px; 
+              display: flex; 
+              justify-content: center; 
+              align-items: center;
+              background: #f0f4f8;
+              margin: 0;
+            }
             .id-card { 
               width: 320px; 
               height: 480px; 
-              border: 1px solid #ccc; 
-              border-radius: 12px; 
+              background: white;
+              border-radius: 16px; 
               position: relative; 
               overflow: hidden; 
-              box-shadow: 0 4px 6px rgba(0,0,0,0.1); 
+              box-shadow: 0 10px 25px rgba(0,0,0,0.1), 0 4px 10px rgba(0,0,0,0.05); 
               display: flex; 
               flex-direction: column;
+              align-items: center;
               text-align: center;
-              font-family: inherit;
               box-sizing: border-box;
             }
-            .header-strip { background-color: ${settings.themeColor}; height: 80px; position: absolute; top: 0; left: 0; width: 100%; z-index: 1; }
-            .content-wrapper { z-index: 2; display: flex; flex-direction: column; align-items: center; padding: 20px; height: 100%; box-sizing: border-box;}
-            .school-logo { width: 50px; height: 50px; object-fit: contain; background: white; border-radius: 50%; padding: 4px; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-top: 10px; margin-bottom: 5px; }
-            .school-name { font-size: 14px; font-weight: bold; color: white; margin-bottom: 30px; text-shadow: 0 1px 2px rgba(0,0,0,0.3); }
-            .photo { width: 130px; height: 130px; border-radius: 50%; object-fit: cover; border: 4px solid white; box-shadow: 0 4px 8px rgba(0,0,0,0.2); margin-top: -15px; background: #EEE; }
-            .name { font-size: 22px; font-weight: 800; color: #111; margin-top: 15px; margin-bottom: 2px; line-height: 1.1; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-            .role { font-size: 13px; color: ${settings.themeColor}; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 15px; }
-            .info-grid { display: flex; justify-content: space-around; width: 100%; border-top: 1px dashed #DDD; border-bottom: 1px dashed #DDD; padding: 10px 0; margin-bottom: 15px; }
-            .info-block { display: flex; flex-direction: column; }
-            .info-label { font-size: 10px; color: #777; text-transform: uppercase; margin-bottom: 2px; font-weight: 600; }
-            .info-value { font-size: 13px; color: #333; font-weight: bold; }
-            .qr-code { width: 60px; height: 60px; margin-top: auto; }
-            .footer { position: absolute; bottom: 0; left: 0; width: 100%; height: 6px; background-color: ${settings.themeColor}; }
-            .barcode-fallback { display: block; width: 80%; height: 30px; background: repeating-linear-gradient(90deg, #000, #000 2px, #fff 2px, #fff 4px); margin: auto; opacity: 0.8;}
+            .background-pattern {
+              position: absolute;
+              top: 0;
+              left: 0;
+              width: 100%;
+              height: 135px;
+              background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+              z-index: 1;
+            }
+            .background-pattern::after {
+              content: '';
+              position: absolute;
+              bottom: 0;
+              left: 0;
+              right: 0;
+              height: 6px;
+              background: linear-gradient(90deg, #0ea5e9, #38bdf8);
+            }
+            .content-wrapper { 
+              z-index: 2; 
+              display: flex; 
+              flex-direction: column; 
+              align-items: center; 
+              padding: 20px 24px; 
+              height: 100%; 
+              width: 100%;
+              box-sizing: border-box;
+            }
+            .school-header {
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+              width: 100%;
+              margin-bottom: 20px;
+            }
+            .school-logo { 
+              width: 44px; 
+              height: 44px; 
+              object-fit: contain; 
+              background: white; 
+              border-radius: 10px; 
+              padding: 4px; 
+              box-shadow: 0 4px 6px rgba(0,0,0,0.1); 
+              margin-bottom: 6px; 
+            }
+            .school-name { 
+              font-size: 14px; 
+              font-weight: 800; 
+              color: white; 
+              text-transform: uppercase;
+              letter-spacing: 0.5px;
+              line-height: 1.2;
+              width: 100%;
+              display: -webkit-box;
+              -webkit-line-clamp: 2;
+              -webkit-box-orient: vertical;
+              overflow: hidden;
+            }
+            
+            .photo-container {
+              position: relative;
+              margin-bottom: 12px;
+              margin-top: -5px;
+            }
+            .photo { 
+              width: 100px; 
+              height: 100px; 
+              border-radius: 50%; 
+              object-fit: cover; 
+              border: 4px solid white; 
+              box-shadow: 0 6px 12px rgba(0,0,0,0.15); 
+              background: #f8fafc; 
+            }
+            
+            .student-info {
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+              width: 100%;
+              margin-bottom: auto;
+            }
+            .name { 
+              font-size: 20px; 
+              font-weight: 800; 
+              color: #0f172a; 
+              line-height: 1.2; 
+              margin-bottom: 4px;
+              width: 100%;
+              display: -webkit-box;
+              -webkit-line-clamp: 2;
+              -webkit-box-orient: vertical;
+              overflow: hidden;
+            }
+            .role { 
+              font-size: 11px; 
+              color: #0ea5e9; 
+              font-weight: 800; 
+              text-transform: uppercase; 
+              letter-spacing: 1.5px;
+            }
+            
+            .info-grid { 
+              display: grid;
+              grid-template-columns: 1fr 1fr;
+              gap: 8px;
+              width: 100%; 
+              background: #f8fafc;
+              border-radius: 10px;
+              padding: 10px;
+              margin-bottom: 16px;
+              border: 1px solid #e2e8f0;
+            }
+            .info-block { display: flex; flex-direction: column; align-items: center; max-width: 100%; }
+            .info-label { font-size: 9px; color: #64748b; text-transform: uppercase; margin-bottom: 2px; font-weight: 700; letter-spacing: 0.5px;}
+            .info-value { font-size: 12px; color: #0f172a; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; width: 100%;}
+            
+            .footer-section {
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+              width: 100%;
+            }
+            .qr-code { 
+              width: 90px; 
+              height: 90px; 
+              margin-bottom: 6px;
+              border-radius: 8px;
+              padding: 4px;
+              background: white;
+              border: 1px solid #e2e8f0;
+            }
+            .id-number {
+              font-size: 11px;
+              color: #64748b;
+              font-variant-numeric: tabular-nums;
+              font-weight: 600;
+              letter-spacing: 1px;
+            }
+            .footer-strip {
+              position: absolute; 
+              bottom: 0; left: 0; width: 100%; height: 8px; 
+              background: linear-gradient(90deg, #0ea5e9, #38bdf8);
+            }
+            @media print {
+              body { background: white; padding: 0; }
+              .id-card { box-shadow: none; border: 1px solid #e2e8f0; }
+              .background-pattern { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+              .footer-strip { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+              .content-wrapper { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+              .qr-code, .photo, .info-grid { border-width: 1px; border-style: solid; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+              .photo { border-color: white; }
+            }
           </style>
         </head>
         <body>
           <div class="id-card">
-            <div class="header-strip"></div>
+            <div class="background-pattern"></div>
             <div class="content-wrapper">
-              ${settings.schoolLogo ? `<img src="${settings.schoolLogo}" class="school-logo" />` : '<div style="height:20px; width:100%;"></div>'}
-              <div class="school-name">${settings.schoolName || 'School Name'}</div>
+              <div class="school-header">
+                ${settings.schoolLogo ? `<img src="${settings.schoolLogo}" class="school-logo" />` : ''}
+                <div class="school-name">${settings.schoolName || 'School Name'}</div>
+              </div>
               
-              ${student.profilePhoto ? `<img src="${student.profilePhoto}" class="photo" />` : `<div class="photo" style="display:flex;align-items:center;justify-content:center;font-size:40px;color:#999;font-weight:bold;">${student.fullName.charAt(0)}</div>`}
-              <div class="name">${student.fullName}</div>
-              <div class="role">Student</div>
+              <div class="photo-container">
+                  ${student.profilePhoto 
+                    ? `<img src="${student.profilePhoto}" class="photo" />` 
+                    : `<div class="photo" style="display:flex;align-items:center;justify-content:center;font-size:36px;color:#94a3b8;font-weight:800;">${student.fullName.charAt(0)}</div>`
+                  }
+              </div>
+              
+              <div class="student-info">
+                <div class="name">${student.fullName}</div>
+                <div class="role">Student</div>
+              </div>
 
               <div class="info-grid">
-                <div class="info-block">
-                  <span class="info-label">ID Number</span>
-                  <span class="info-value">${student.nationalId || '-'}</span>
-                </div>
                 <div class="info-block">
                   <span class="info-label">Class</span>
                   <span class="info-value">${assignedClass?.name || 'Unassigned'}</span>
                 </div>
+                <div class="info-block">
+                  <span class="info-label">Date of Birth</span>
+                  <span class="info-value">${student.dob || '-'}</span>
+                </div>
               </div>
 
-              ${student.nationalId ? `<img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(student.nationalId || student.id?.toString() || 'student')}" class="qr-code" crossorigin="anonymous" />` : `<div class="barcode-fallback"></div>`}
+              <div class="footer-section">
+                ${student.nationalId 
+                  ? `<img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&margin=0&data=${encodeURIComponent(student.nationalId || student.id?.toString() || 'student')}" class="qr-code" crossorigin="anonymous" />`
+                  : `<div style="width:90px;height:90px;background:#f1f5f9;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:10px;color:#94a3b8;margin-bottom:6px;">No ID</div>`
+                }
+                <div class="id-number">${student.nationalId || student.id || 'N/A'}</div>
+              </div>
             </div>
-            <div class="footer"></div>
+            <div class="footer-strip"></div>
           </div>
         </body>
       </html>
@@ -610,7 +791,7 @@ function StudentDetailsModal({ student, onClose, onEdit }: { student: Student, o
             </div>
             <div>
               <h2 className="text-2xl font-bold text-gray-950 dark:text-white">{student.fullName}</h2>
-              <p className="text-sm text-gray-500 dark:text-cyan-100/50">National ID: {student.nationalId}</p>
+              <p className="text-sm text-gray-500 dark:text-cyan-100/50">Student ID: {student.nationalId}</p>
             </div>
           </div>
           

@@ -154,7 +154,7 @@ export default function Settings() {
             await db.students.bulkAdd(insertedRecords as any);
             alert(`Success! Imported ${insertedRecords.length} student records from CSV.`);
           } else {
-            alert('No valid student records found in the CSV. Make sure you have "fullName" and "nationalId" columns.');
+            alert('No valid student records found in the CSV. Make sure you have "fullName" and "nationalId" or "studentId" columns.');
           }
         } catch (err) {
           console.error(err);
@@ -494,7 +494,7 @@ export default function Settings() {
               className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed animate-none flex-1"
               disabled={isImportingCSV}
             />
-            <Tooltip content="Import student profiles via CSV. Must contain 'fullName' and 'nationalId' columns.">
+            <Tooltip content="Import student profiles via CSV. Must contain 'fullName' and 'nationalId' or 'studentId' columns.">
               <button className={`flex w-full items-center gap-2 px-5 py-2.5 border border-emerald-500/30 text-emerald-700 dark:text-emerald-400 font-bold rounded-lg transition-all bg-emerald-50 dark:bg-emerald-500/10 text-sm ${isImportingCSV ? 'opacity-50' : 'hover:bg-emerald-100 dark:hover:bg-emerald-500/20'}`}>
                 <FilePlus className="w-4 h-4" />
                 {isImportingCSV ? 'Importing...' : 'Bulk Import Students (CSV)'}

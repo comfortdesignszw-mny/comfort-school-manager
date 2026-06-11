@@ -437,7 +437,7 @@ export default function AttendanceTracker() {
                             {student.fullName}
                           </span>
                           <span className="text-[10px] text-gray-400 font-medium font-mono">
-                            ID: {student.nationalId || 'N/A'}
+                            Student ID: {student.nationalId || 'N/A'}
                           </span>
                         </div>
                       </div>
