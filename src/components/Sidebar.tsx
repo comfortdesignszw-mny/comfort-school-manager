@@ -50,8 +50,8 @@ export default function Sidebar({ currentView, onChangeView, isOpen, onClose, to
         flex flex-col
       `}>
         <div className="p-6 border-b border-gray-200 dark:border-cyan-900/30 flex flex-col gap-1">
-          <h1 className="font-extrabold text-xl text-gray-900 dark:text-gray-100 tracking-tight leading-tight">
-            Comfort SM
+          <h1 className="font-extrabold text-[1.1rem] text-gray-900 dark:text-gray-100 tracking-tight leading-none truncate w-full" title="Comfort School Manager">
+            Comfort School Manager
           </h1>
           <p className="text-xs text-gray-500 dark:text-cyan-400 font-medium">Manage your School like a Pro</p>
         </div>
