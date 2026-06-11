@@ -1,12 +1,15 @@
 import React, { useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../db';
-import { Search, Plus, X, Upload, Trash2, Edit2, Share2, Download } from 'lucide-react';
+import { Search, Plus, X, Upload, Trash2, Edit2, Share2, Download, Users, CheckSquare } from 'lucide-react';
 import type { Student, Guardian } from '../types';
 import { getSettings } from '../db';
 import { downloadPDF } from '../utils/pdf';
+import Tooltip from '../components/Tooltip';
+import AttendanceTracker from './AttendanceTracker';
 
 export default function Students() {
+  const [activeTab, setActiveTab] = useState<'directory' | 'attendance'>('directory');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const [isAdding, setIsAdding] = useState(false);
@@ -30,85 +33,119 @@ export default function Students() {
     <div className="flex flex-col h-full space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900 tracking-tight">Students Directory</h2>
-          <p className="text-gray-500 mt-1">Manage student profiles, guardians, and academic data.</p>
+          <h2 className="text-2xl font-bold text-gray-900 tracking-tight">Students &amp; Attendance</h2>
+          <p className="text-gray-500 mt-1">Manage student profiles, guardians, and daily attendance logs.</p>
         </div>
-        <button 
-          onClick={() => setIsAdding(true)}
-          className="bg-primary text-white px-4 py-2 rounded-lg font-medium flex items-center gap-2 hover:bg-primary/90 transition-colors"
+        {activeTab === 'directory' && (
+          <button 
+            onClick={() => setIsAdding(true)}
+            className="bg-primary text-white px-4 py-2 rounded-lg font-medium flex items-center gap-2 hover:bg-primary/90 transition-colors cursor-pointer"
+          >
+            <Plus className="w-4 h-4" />
+            Add Student
+          </button>
+        )}
+      </div>
+
+      {/* Tabs Switcher */}
+      <div className="flex border-b border-gray-200 dark:border-cyan-900/15">
+        <button
+          onClick={() => setActiveTab('directory')}
+          className={`py-2 px-4 font-bold text-xs uppercase tracking-wider border-b-2 transition-all cursor-pointer flex items-center gap-1.5 ${
+            activeTab === 'directory' 
+              ? 'border-primary text-primary' 
+              : 'border-transparent text-gray-400 hover:text-gray-750 dark:hover:text-cyan-300'
+          }`}
         >
-          <Plus className="w-4 h-4" />
-          Add Student
+          <Users className="w-3.5 h-3.5" />
+          Students Directory
+        </button>
+        <button
+          onClick={() => setActiveTab('attendance')}
+          className={`py-2 px-4 font-bold text-xs uppercase tracking-wider border-b-2 transition-all cursor-pointer flex items-center gap-1.5 ${
+            activeTab === 'attendance' 
+              ? 'border-primary text-primary' 
+              : 'border-transparent text-gray-400 hover:text-gray-750 dark:hover:text-cyan-300'
+          }`}
+        >
+          <CheckSquare className="w-3.5 h-3.5" />
+          Attendance Tracking
         </button>
       </div>
 
-      <div className="table-container">
-        <div className="p-4 border-b border-gray-250 dark:border-cyan-900/20 flex items-center gap-3">
-          <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-cyan-500/50 w-5 h-5" />
-            <input 
-              type="text" 
-              placeholder="Search by name or ID..." 
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 bg-gray-50 dark:bg-slate-950/45 border border-gray-150 dark:border-cyan-900/30 rounded-lg text-gray-950 dark:text-white placeholder-gray-400 dark:placeholder-gray-550 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary"
-            />
-          </div>
-        </div>
-        
-        <div className="flex-1 overflow-auto">
-          <table className="w-full text-left border-collapse">
-            <thead className="table-header sticky top-0">
-              <tr>
-                <th className="py-3 px-4 font-semibold">Name</th>
-                <th className="py-3 px-4 font-semibold">ID Number</th>
-                <th className="py-3 px-4 font-semibold">Gender</th>
-                <th className="py-3 px-4 font-semibold">DOB</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100 dark:divide-cyan-900/10 text-sm">
-              {students?.length === 0 ? (
-                <tr>
-                  <td colSpan={4} className="py-12 text-center text-gray-500 dark:text-cyan-100/40 italic">
-                    No students found.
-                  </td>
-                </tr>
-              ) : (
-                students?.map(student => (
-                  <tr 
-                    key={student.id} 
-                    onClick={() => setSelectedStudent(student)}
-                    className="table-row cursor-pointer transition-colors"
-                  >
-                    <td className="py-3 px-4 font-bold text-gray-950 dark:text-white">{student.fullName}</td>
-                    <td className="py-3 px-4 text-gray-600 dark:text-cyan-100/70">{student.nationalId}</td>
-                    <td className="py-3 px-4 text-gray-600 dark:text-cyan-100/70">{student.gender}</td>
-                    <td className="py-3 px-4 text-gray-600 dark:text-cyan-100/70">{student.dob}</td>
+      {activeTab === 'directory' ? (
+        <>
+          <div className="table-container">
+            <div className="p-4 border-b border-gray-250 dark:border-cyan-900/20 flex items-center gap-3">
+              <div className="relative flex-1 max-w-md">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-cyan-500/50 w-5 h-5" />
+                <input 
+                  type="text" 
+                  placeholder="Search by name or ID..." 
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 bg-gray-50 dark:bg-slate-950/45 border border-gray-150 dark:border-cyan-900/30 rounded-lg text-gray-950 dark:text-white placeholder-gray-400 dark:placeholder-gray-550 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary"
+                />
+              </div>
+            </div>
+            
+            <div className="flex-1 overflow-auto">
+              <table className="w-full text-left border-collapse">
+                <thead className="table-header sticky top-0">
+                  <tr>
+                    <th className="py-3 px-4 font-semibold">Name</th>
+                    <th className="py-3 px-4 font-semibold">ID Number</th>
+                    <th className="py-3 px-4 font-semibold">Gender</th>
+                    <th className="py-3 px-4 font-semibold">DOB</th>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
+                </thead>
+                <tbody className="divide-y divide-gray-100 dark:divide-cyan-900/10 text-sm">
+                  {students?.length === 0 ? (
+                    <tr>
+                      <td colSpan={4} className="py-12 text-center text-gray-500 dark:text-cyan-100/40 italic">
+                        No students found.
+                      </td>
+                    </tr>
+                  ) : (
+                    students?.map(student => (
+                      <tr 
+                        key={student.id} 
+                        onClick={() => setSelectedStudent(student)}
+                        className="table-row cursor-pointer transition-colors"
+                      >
+                        <td className="py-3 px-4 font-bold text-gray-950 dark:text-white">{student.fullName}</td>
+                        <td className="py-3 px-4 text-gray-600 dark:text-cyan-100/70">{student.nationalId}</td>
+                        <td className="py-3 px-4 text-gray-600 dark:text-cyan-100/70">{student.gender}</td>
+                        <td className="py-3 px-4 text-gray-600 dark:text-cyan-100/70">{student.dob}</td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
 
-      {isAdding && (
-        <StudentModal onClose={() => setIsAdding(false)} />
-      )}
+          {isAdding && (
+            <StudentModal onClose={() => setIsAdding(false)} />
+          )}
 
-      {editingStudent && (
-        <StudentModal 
-          initialData={editingStudent} 
-          onClose={() => { setEditingStudent(null); setSelectedStudent(null); }} 
-        />
-      )}
+          {editingStudent && (
+            <StudentModal 
+              initialData={editingStudent} 
+              onClose={() => { setEditingStudent(null); setSelectedStudent(null); }} 
+            />
+          )}
 
-      {selectedStudent && !editingStudent && (
-        <StudentDetailsModal 
-          student={selectedStudent} 
-          onClose={() => setSelectedStudent(null)} 
-          onEdit={() => setEditingStudent(selectedStudent)}
-        />
+          {selectedStudent && !editingStudent && (
+            <StudentDetailsModal 
+              student={selectedStudent} 
+              onClose={() => setSelectedStudent(null)} 
+              onEdit={() => setEditingStudent(selectedStudent)}
+            />
+          )}
+        </>
+      ) : (
+        <AttendanceTracker />
       )}
     </div>
   );
@@ -490,18 +527,26 @@ function StudentDetailsModal({ student, onClose, onEdit }: { student: Student, o
           </div>
           
           <div className="flex items-center gap-2">
-            <button onClick={onEdit} className="p-2 text-gray-450 dark:text-cyan-200 hover:text-primary dark:hover:text-cyan-400 bg-gray-100 dark:bg-slate-800 rounded-full transition-colors" title="Edit Student">
-              <Edit2 className="w-4 h-4"/>
-            </button>
-            <button onClick={handleShare} className="p-2 text-gray-450 dark:text-cyan-200 hover:text-primary dark:hover:text-cyan-400 bg-gray-100 dark:bg-slate-800 rounded-full transition-colors" title="Share Student Record">
-              <Share2 className="w-4 h-4"/>
-            </button>
-            <button onClick={generatePDF} className="p-2 text-gray-450 dark:text-cyan-200 hover:text-primary dark:hover:text-cyan-400 bg-gray-100 dark:bg-slate-800 rounded-full transition-colors" title="Download PDF">
-              <Download className="w-4 h-4"/>
-            </button>
-            <button onClick={handleDelete} className="p-2 text-gray-450 dark:text-red-400 hover:text-red-650 bg-gray-100 dark:bg-slate-800 hover:bg-red-50 dark:hover:bg-red-950/50 rounded-full transition-colors" title="Delete Student">
-              <Trash2 className="w-4 h-4"/>
-            </button>
+            <Tooltip content="Edit student details & assignments">
+              <button onClick={onEdit} className="p-2 text-gray-450 dark:text-cyan-200 hover:text-primary dark:hover:text-cyan-400 bg-gray-100 dark:bg-slate-800 rounded-full transition-colors cursor-pointer" title="Edit Student">
+                <Edit2 className="w-4 h-4"/>
+              </button>
+            </Tooltip>
+            <Tooltip content="Copy student sharing text summary">
+              <button onClick={handleShare} className="p-2 text-gray-450 dark:text-cyan-200 hover:text-primary dark:hover:text-cyan-400 bg-gray-100 dark:bg-slate-800 rounded-full transition-colors cursor-pointer" title="Share Student Record">
+                <Share2 className="w-4 h-4"/>
+              </button>
+            </Tooltip>
+            <Tooltip content="Export full profile as PDF report">
+              <button onClick={generatePDF} className="p-2 text-gray-450 dark:text-cyan-200 hover:text-primary dark:hover:text-cyan-400 bg-gray-100 dark:bg-slate-800 rounded-full transition-colors cursor-pointer" title="Download PDF">
+                <Download className="w-4 h-4"/>
+              </button>
+            </Tooltip>
+            <Tooltip content="Delete student record permanently">
+              <button onClick={handleDelete} className="p-2 text-gray-450 dark:text-red-400 hover:text-red-650 bg-gray-100 dark:bg-slate-800 hover:bg-red-50 dark:hover:bg-red-950/50 rounded-full transition-colors cursor-pointer" title="Delete Student">
+                <Trash2 className="w-4 h-4"/>
+              </button>
+            </Tooltip>
             <div className="w-px h-6 bg-gray-200 dark:bg-cyan-900/45 mx-1"></div>
             <button onClick={onClose} className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-cyan-400 bg-gray-100 dark:bg-slate-800 rounded-full transition-colors">
               <X className="w-4 h-4"/>

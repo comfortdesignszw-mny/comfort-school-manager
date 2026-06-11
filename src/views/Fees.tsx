@@ -3,6 +3,7 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { db, getSettings } from '../db';
 import { Plus, Download, CheckCircle, AlertCircle, HelpCircle, X, Search, Landmark, Edit2, Trash2, Share2, CheckSquare, Square } from 'lucide-react';
 import { downloadPDF } from '../utils/pdf';
+import Tooltip from '../components/Tooltip';
 
 export default function Fees() {
   const [isAdding, setIsAdding] = useState(false);
@@ -435,34 +436,42 @@ export default function Fees() {
           {/* Card Management Buttons row */}
           <div className="flex flex-wrap items-center gap-2 border-t border-gray-200/55 dark:border-slate-800/60 pt-3 mt-1">
             <span className="text-xs font-bold text-gray-400 dark:text-cyan-100/45 uppercase tracking-wider mr-2">Management Controls:</span>
-            <button 
-              onClick={() => handleTriggerAction('edit')}
-              className="px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 bg-white dark:bg-slate-800 text-gray-700 dark:text-slate-200 hover:bg-primary hover:text-white transition-all border border-gray-200 dark:border-cyan-900/30 cursor-pointer shadow-2xs"
-              title="Click to prepare select boxes for bulk/single editing records"
-            >
-              <Edit2 className="w-3.5 h-3.5 text-primary" /> Edit Record(s)
-            </button>
-            <button 
-              onClick={() => handleTriggerAction('delete')}
-              className="px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 bg-white dark:bg-slate-800 text-red-650 dark:text-red-400 hover:bg-rose-600 hover:text-white transition-all border border-gray-200 dark:border-cyan-900/30 cursor-pointer shadow-2xs"
-              title="Click to prepare select boxes for bulk deleting records"
-            >
-              <Trash2 className="w-3.5 h-3.5 text-red-500" /> Delete Record(s)
-            </button>
-            <button 
-              onClick={() => handleTriggerAction('share')}
-              className="px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 bg-white dark:bg-slate-800 text-gray-700 dark:text-slate-200 hover:bg-primary hover:text-white transition-all border border-gray-200 dark:border-cyan-900/30 cursor-pointer shadow-2xs"
-              title="Click to prepare select boxes for copying formatted summaries to share"
-            >
-              <Share2 className="w-3.5 h-3.5 text-emerald-500" /> Share Report
-            </button>
-            <button 
-              onClick={() => handleTriggerAction('select')}
-              className="px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 bg-primary/10 dark:bg-cyan-500/10 text-primary dark:text-cyan-400 hover:bg-primary hover:text-white transition-all border border-primary/20 dark:border-cyan-900/35 cursor-pointer shadow-2xs"
-              title="Activate full batch select workspace with all actions enabled"
-            >
-              <CheckSquare className="w-3.5 h-3.5" /> Batch Select
-            </button>
+            <Tooltip content="Prepare checkboxes to edit single/multiple ledger rows">
+              <button 
+                onClick={() => handleTriggerAction('edit')}
+                className="px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 bg-white dark:bg-slate-800 text-gray-700 dark:text-slate-200 hover:bg-primary hover:text-white transition-all border border-gray-200 dark:border-cyan-900/30 cursor-pointer shadow-2xs"
+                title="Click to prepare select boxes for bulk/single editing records"
+              >
+                <Edit2 className="w-3.5 h-3.5 text-primary" /> Edit Record(s)
+              </button>
+            </Tooltip>
+            <Tooltip content="Prepare checkboxes to delete single/multiple ledger rows">
+              <button 
+                onClick={() => handleTriggerAction('delete')}
+                className="px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 bg-white dark:bg-slate-800 text-red-650 dark:text-red-400 hover:bg-rose-600 hover:text-white transition-all border border-gray-200 dark:border-cyan-900/30 cursor-pointer shadow-2xs"
+                title="Click to prepare select boxes for bulk deleting records"
+              >
+                <Trash2 className="w-3.5 h-3.5 text-red-500" /> Delete Record(s)
+              </button>
+            </Tooltip>
+            <Tooltip content="Prepare checkboxes to copy billing report text for messaging">
+              <button 
+                onClick={() => handleTriggerAction('share')}
+                className="px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 bg-white dark:bg-slate-800 text-gray-700 dark:text-slate-200 hover:bg-primary hover:text-white transition-all border border-gray-200 dark:border-cyan-900/30 cursor-pointer shadow-2xs"
+                title="Click to prepare select boxes for copying formatted summaries to share"
+              >
+                <Share2 className="w-3.5 h-3.5 text-emerald-500" /> Share Report
+              </button>
+            </Tooltip>
+            <Tooltip content="Prepare checkboxes to perform multiple batch operations">
+              <button 
+                onClick={() => handleTriggerAction('select')}
+                className="px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 bg-primary/10 dark:bg-cyan-500/10 text-primary dark:text-cyan-400 hover:bg-primary hover:text-white transition-all border border-primary/20 dark:border-cyan-900/35 cursor-pointer shadow-2xs"
+                title="Activate full batch select workspace with all actions enabled"
+              >
+                <CheckSquare className="w-3.5 h-3.5" /> Batch Select
+              </button>
+            </Tooltip>
           </div>
         </div>
 

@@ -18,6 +18,7 @@ export interface Student {
     classId?: number;
     assignedTeachers?: string[];
     assignedSubjects?: string[];
+    marks?: { [subjectName: string]: number };
   };
 }
 
@@ -68,5 +69,19 @@ export interface Staff {
   contact?: string;
   email?: string;
   status: 'Active' | 'Inactive';
+}
+
+export interface Attendance {
+  id?: number;
+  date: string; // YYYY-MM-DD
+  studentId: number;
+  status: 'Present' | 'Absent' | 'Late';
+}
+
+export interface CalendarEvent {
+  id?: number;
+  title: string;
+  date: string; // YYYY-MM-DD
+  type: 'exam' | 'event' | 'deadline';
 }
 

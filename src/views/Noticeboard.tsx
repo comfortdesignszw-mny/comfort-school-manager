@@ -3,6 +3,7 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { db, getSettings } from '../db';
 import { Plus, Trash2, Edit2, Share2, Download, AlertCircle } from 'lucide-react';
 import { downloadPDF } from '../utils/pdf';
+import Tooltip from '../components/Tooltip';
 
 export default function Noticeboard() {
   const [isAdding, setIsAdding] = useState(false);
@@ -108,35 +109,43 @@ export default function Noticeboard() {
 
               {/* Action operations shelf */}
               <div className="mt-6 pt-4 border-t border-gray-100 dark:border-slate-800/60 flex justify-end gap-2 shrink-0">
-                <button 
-                  onClick={() => setEditingNotice(notice)}
-                  className="px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-slate-200 hover:bg-primary hover:text-white transition-colors border border-gray-200 dark:border-cyan-900/30"
-                  title="Edit Notice"
-                >
-                  <Edit2 className="w-3.5 h-3.5" /> Edit
-                </button>
-                <button 
-                  onClick={() => shareNotice(notice)}
-                  className="px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-slate-200 hover:bg-primary hover:text-white transition-colors border border-gray-200 dark:border-cyan-900/30"
-                  title="Copy formatted notice to clipboard"
-                >
-                  <Share2 className="w-3.5 h-3.5" /> Share
-                </button>
-                <button 
-                  onClick={() => downloadNoticePDF(notice)}
-                  className="px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-slate-200 hover:bg-primary hover:text-white transition-colors border border-gray-200 dark:border-cyan-900/30"
-                  title="Download notice PDF"
-                >
-                  <Download className="w-3.5 h-3.5" /> PDF
-                </button>
+                <Tooltip content="Edit original announcement notice">
+                  <button 
+                    onClick={() => setEditingNotice(notice)}
+                    className="px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-slate-200 hover:bg-primary hover:text-white transition-colors border border-gray-200 dark:border-cyan-900/30 cursor-pointer"
+                    title="Edit Notice"
+                  >
+                    <Edit2 className="w-3.5 h-3.5" /> Edit
+                  </button>
+                </Tooltip>
+                <Tooltip content="Copy notice formatting for sharing text">
+                  <button 
+                    onClick={() => shareNotice(notice)}
+                    className="px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-slate-200 hover:bg-primary hover:text-white transition-colors border border-gray-200 dark:border-cyan-900/30 cursor-pointer"
+                    title="Copy formatted notice to clipboard"
+                  >
+                    <Share2 className="w-3.5 h-3.5" /> Share
+                  </button>
+                </Tooltip>
+                <Tooltip content="Export notice print layout to PDF">
+                  <button 
+                    onClick={() => downloadNoticePDF(notice)}
+                    className="px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-slate-200 hover:bg-primary hover:text-white transition-colors border border-gray-200 dark:border-cyan-900/30 cursor-pointer"
+                    title="Download notice PDF"
+                  >
+                    <Download className="w-3.5 h-3.5" /> PDF
+                  </button>
+                </Tooltip>
                 <div className="w-px h-6 bg-gray-200 dark:bg-slate-800 self-center mx-1"></div>
-                <button 
-                  onClick={() => deleteNotice(notice.id)}
-                  className="px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 bg-rose-50 dark:bg-rose-950/20 text-red-600 dark:text-red-400 hover:bg-red-600 hover:text-white transition-all"
-                  title="Delete Notice"
-                >
-                  <Trash2 className="w-3.5 h-3.5" /> Delete
-                </button>
+                <Tooltip content="Permanently delete announcement">
+                  <button 
+                    onClick={() => deleteNotice(notice.id)}
+                    className="px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 bg-rose-50 dark:bg-rose-950/20 text-red-600 dark:text-red-400 hover:bg-red-600 hover:text-white transition-all cursor-pointer"
+                    title="Delete Notice"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" /> Delete
+                  </button>
+                </Tooltip>
               </div>
             </div>
           ))
