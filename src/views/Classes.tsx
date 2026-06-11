@@ -96,10 +96,16 @@ export default function Classes() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {classes.length === 0 ? (
-          <div className="col-span-full py-16 text-center text-gray-500 bg-white dark:bg-slate-900/40 rounded-xl border border-dashed border-gray-300 dark:border-cyan-900/40">
-            <BookOpen className="w-12 h-12 mx-auto text-gray-400 mb-2" />
-            <p className="text-lg font-medium">No {settings.systemMode === 'Tertiary' ? 'programs' : 'classes'} created yet.</p>
-            <p className="text-sm text-gray-400">Click the button above to get started.</p>
+          <div className="col-span-full py-16 text-center border-dashed border-2 bg-gray-50/50 dark:bg-slate-900/40 rounded-xl border-gray-200 dark:border-cyan-900/20">
+            <BookOpen className="w-16 h-16 mx-auto text-gray-300 dark:text-gray-600 mb-4" strokeWidth={1} />
+            <h3 className="text-gray-900 dark:text-gray-200 font-bold text-lg mb-1">No {settings.systemMode === 'Tertiary' ? 'programs' : 'classes'} created yet</h3>
+            <p className="text-gray-500 dark:text-gray-400 text-sm max-w-sm mx-auto mb-4">You haven't set up the academic structure. Create your first class/program to begin adding students.</p>
+            <button 
+              onClick={() => setIsAdding(true)}
+              className="bg-primary/10 text-primary dark:bg-primary/20 dark:text-cyan-400 px-4 py-2 rounded-lg font-bold text-sm hover:bg-primary/20 transition-colors inline-flex items-center gap-2"
+            >
+              <Plus className="w-4 h-4" /> Create {settings.systemMode === 'Tertiary' ? 'Program' : 'Class'}
+            </button>
           </div>
         ) : (
           classes.map(cls => {

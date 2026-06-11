@@ -14,10 +14,12 @@ import {
   AlertCircle, 
   Search, 
   TrendingDown, 
-  Sliders
+  Sliders,
+  ScanLine
 } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer } from 'recharts';
 import Tooltip from '../components/Tooltip';
+import { Scanner } from '@yudiel/react-qr-scanner';
 
 export default function AttendanceTracker() {
   const settings = getSettings();
@@ -32,6 +34,9 @@ export default function AttendanceTracker() {
     return `${yyyy}-${mm}-${dd}`;
   });
 
+  const [showScanner, setShowScanner] = useState(false);
+  const [scanMessage, setScanMessage] = useState<{ text: string, type: 'success' | 'error' } | null>(null);
+
   // Set initial selected class
   useEffect(() => {
     if (classes.length > 0 && selectedClassId === null) {
@@ -44,6 +49,9 @@ export default function AttendanceTracker() {
     () => (selectedClassId ? db.students.where('schoolData.classId').equals(selectedClassId).toArray() : []),
     [selectedClassId]
   ) || [];
+
+  // Query ALL students for QR scanner (so we can check in anyone)
+  const allStudents = useLiveQuery(() => db.students.toArray(), []) || [];
 
   // Query existing attendance for the class + date
   const existingAttendance = useLiveQuery(
@@ -127,6 +135,47 @@ export default function AttendanceTracker() {
       console.error(err);
       setSaveStatus('error');
     }
+  };
+
+  const handleScan = async (result: string) => {
+    if (!result) return;
+    
+    // Find student by nationalId or local DB ID (if string matches)
+    const scannedStudent = allStudents.find(
+      s => s.nationalId.trim() === result.trim() || String(s.id) === result.trim()
+    );
+
+    if (scannedStudent && scannedStudent.id) {
+      // Check if student is in the currently viewed class, if not we switch class if they have one
+      if (scannedStudent.schoolData?.classId && scannedStudent.schoolData.classId !== selectedClassId) {
+        setSelectedClassId(scannedStudent.schoolData.classId);
+      }
+
+      // Mark present
+      handleUpdateStatus(scannedStudent.id, 'Present');
+      
+      // Immediately save to DB for real-time check-in
+      try {
+        const record = { date: selectedDate, studentId: scannedStudent.id, status: 'Present' as const };
+        const existing = await db.attendance
+            .where('date').equals(record.date)
+            .and(item => item.studentId === record.studentId)
+            .first();
+
+        if (existing && existing.id) {
+          await db.attendance.update(existing.id, { status: record.status });
+        } else {
+          await db.attendance.add(record);
+        }
+        setScanMessage({ text: `${scannedStudent.fullName} checked in!`, type: 'success' });
+      } catch (err) {
+        setScanMessage({ text: `Failed to save ${scannedStudent.fullName}.`, type: 'error' });
+      }
+    } else {
+      setScanMessage({ text: 'Unknown student ID.', type: 'error' });
+    }
+
+    setTimeout(() => setScanMessage(null), 3000);
   };
 
   // Seeding test historical data for a complete charts visualization
@@ -250,6 +299,15 @@ export default function AttendanceTracker() {
 
         <div className="flex items-end justify-start gap-2 pt-2 md:pt-0">
           <button
+            onClick={() => setShowScanner(true)}
+            className="px-3.5 py-2.5 bg-indigo-50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-500/20 border border-indigo-200 dark:border-indigo-500/30 rounded-lg text-xs font-bold flex items-center gap-1.5 cursor-pointer select-none transition-all"
+            title="Scan Student QR Code"
+          >
+            <ScanLine className="w-4 h-4" />
+            Scanner Check-in
+          </button>
+          
+          <button
             disabled={isGeneratingMock}
             onClick={handleSeedHistoricalData}
             className="px-3.5 py-2.5 bg-gray-50 dark:bg-slate-950/45 text-slate-800 dark:text-cyan-400 hover:bg-gray-100 dark:hover:bg-slate-900 border border-gray-200 dark:border-cyan-900/40 rounded-lg text-xs font-bold flex items-center gap-1.5 cursor-pointer select-none transition-all"
@@ -260,6 +318,53 @@ export default function AttendanceTracker() {
           </button>
         </div>
       </div>
+
+      {showScanner && (
+        <div className="fixed inset-0 z-[100] bg-black/80 flex items-center justify-center p-4 backdrop-blur-sm">
+          <div className="bg-white dark:bg-slate-900 w-full max-w-sm rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
+            <div className="flex items-center justify-between p-4 border-b border-gray-100 dark:border-cyan-900/30">
+              <h3 className="font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                <ScanLine className="w-5 h-5 text-indigo-500" />
+                Scan Student ID
+              </h3>
+              <button 
+                onClick={() => setShowScanner(false)}
+                className="text-gray-400 hover:text-gray-600 bg-gray-100 hover:bg-gray-200 dark:bg-slate-800 dark:hover:bg-slate-700 rounded-full p-1.5 transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            
+            <div className="relative aspect-square w-fullbg-black">
+              <Scanner 
+                onScan={(result) => {
+                  if (result && result.length > 0) {
+                    handleScan(result[0].rawValue);
+                  }
+                }}
+                onError={(error) => console.error(error)}
+                components={{
+                  audio: false, 
+                  tracker: true,
+                }}
+              />
+              
+              {/* Scan Overlay Message */}
+              {scanMessage && (
+                <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
+                  <div className={`px-4 py-2 rounded-lg shadow-lg font-bold text-white text-sm animate-in zoom-in duration-150 ${scanMessage.type === 'success' ? 'bg-emerald-500' : 'bg-rose-500'}`}>
+                    {scanMessage.text}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="p-4 bg-gray-50 dark:bg-slate-950/50 text-center text-xs font-medium text-gray-500 dark:text-cyan-100/50">
+              Aim camera at student QR code to instantly mark attendance for {selectedDate}.
+            </div>
+          </div>
+        </div>
+      )}
 
       {students.length === 0 ? (
         <div className="bg-white dark:bg-slate-900 border dark:border-cyan-950/20 rounded-xl p-12 text-center text-gray-500">

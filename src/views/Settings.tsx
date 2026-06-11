@@ -1,12 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { getSettings, saveSettings } from '../db';
 import { backupData, restoreData } from '../utils/backup';
-import { Download, Upload, Lock, Unlock, ShieldCheck, Key } from 'lucide-react';
-import type { AppSettings } from '../types';
+import { Download, Upload, Lock, Unlock, ShieldCheck, Key, FilePlus } from 'lucide-react';
+import type { AppSettings, Student } from '../types';
+import Papa from 'papaparse';
+import { db } from '../db';
+import Tooltip from '../components/Tooltip';
 
 export default function Settings() {
   const [settings, setSettings] = useState<AppSettings>(getSettings());
   const [isRestoring, setIsRestoring] = useState(false);
+  const [isImportingCSV, setIsImportingCSV] = useState(false);
 
   // App Lock system states
   const [appLockEnabled, setAppLockEnabled] = useState(() => {
@@ -109,6 +113,62 @@ export default function Settings() {
         setIsRestoring(false);
       }
     }
+    e.target.value = '';
+  };
+
+  const handleCSVImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsImportingCSV(true);
+    Papa.parse(file, {
+      header: true,
+      skipEmptyLines: true,
+      complete: async (results) => {
+        try {
+          const insertedRecords = [];
+          for (const row of results.data as any[]) {
+            if (row.fullName && row.nationalId) {
+              const newStudent = {
+                fullName: row.fullName,
+                nationalId: String(row.nationalId),
+                dob: row.dob || 'Unknown',
+                gender: ['Male', 'Female', 'Other'].includes(row.gender) ? row.gender : 'Other',
+                physicalAddress: row.physicalAddress || 'Not Provided',
+                profilePhoto: '',
+                guardianData: row.guardianName ? [{
+                  name: row.guardianName,
+                  relation: row.guardianRelation || 'Unknown',
+                  contact: row.guardianContact || 'Unknown',
+                  address: row.guardianAddress || 'Unknown'
+                }] : [],
+                schoolData: {
+                  assignedSubjects: []
+                }
+              };
+              insertedRecords.push(newStudent);
+            }
+          }
+
+          if (insertedRecords.length > 0) {
+            await db.students.bulkAdd(insertedRecords as any);
+            alert(`Success! Imported ${insertedRecords.length} student records from CSV.`);
+          } else {
+            alert('No valid student records found in the CSV. Make sure you have "fullName" and "nationalId" columns.');
+          }
+        } catch (err) {
+          console.error(err);
+          alert('Error importing CSV. Ensure the format is correct.');
+        } finally {
+          setIsImportingCSV(false);
+        }
+      },
+      error: () => {
+        alert('Failed to parse CSV file.');
+        setIsImportingCSV(false);
+      }
+    });
+
     e.target.value = '';
   };
 
@@ -399,9 +459,9 @@ export default function Settings() {
 
       {/* Backup and restore with optimized contrast styles */}
       <section className="glass-card space-y-6">
-        <h3 className="text-lg font-bold text-gray-950 dark:text-white border-b border-gray-100 dark:border-cyan-900/30 pb-2">Data Backup & Restore</h3>
+        <h3 className="text-lg font-bold text-gray-950 dark:text-white border-b border-gray-100 dark:border-cyan-900/30 pb-2">Export / Import Database (JSON)</h3>
         <p className="text-sm text-gray-650 dark:text-cyan-100/70 leading-relaxed animate-none">
-          This system runs entirely offline in your browser. It is critical to download a backup file regularly to prevent data loss.
+          This system runs entirely offline in your browser. Export the entire local database state as a JSON file to prevent data loss or import it back to restore the system state.
         </p>
         <div className="flex flex-wrap gap-4 pt-2">
           <button 
@@ -409,7 +469,7 @@ export default function Settings() {
             className="flex items-center gap-2 px-5 py-2.5 bg-primary text-white font-bold rounded-lg hover:bg-primary/95 transition-all shadow-xs cursor-pointer text-sm"
           >
             <Download className="w-4 h-4" />
-            Download Full Backup
+            Export DB to JSON
           </button>
           
           <div className="relative">
@@ -422,8 +482,24 @@ export default function Settings() {
             />
             <button className={`flex items-center gap-2 px-5 py-2.5 border border-gray-300 dark:border-cyan-900/40 text-gray-750 dark:text-cyan-200 font-bold rounded-lg transition-all bg-white dark:bg-slate-800 text-sm ${isRestoring ? 'opacity-50' : 'hover:bg-gray-100 dark:hover:bg-slate-700'}`}>
               <Upload className="w-4 h-4" />
-              {isRestoring ? 'Restoring...' : 'Restore from File'}
+              {isRestoring ? 'Restoring...' : 'Import DB from JSON'}
             </button>
+          </div>
+
+          <div className="relative">
+             <input 
+              type="file" 
+              accept=".csv"
+              onChange={handleCSVImport}
+              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed animate-none flex-1"
+              disabled={isImportingCSV}
+            />
+            <Tooltip content="Import student profiles via CSV. Must contain 'fullName' and 'nationalId' columns.">
+              <button className={`flex w-full items-center gap-2 px-5 py-2.5 border border-emerald-500/30 text-emerald-700 dark:text-emerald-400 font-bold rounded-lg transition-all bg-emerald-50 dark:bg-emerald-500/10 text-sm ${isImportingCSV ? 'opacity-50' : 'hover:bg-emerald-100 dark:hover:bg-emerald-500/20'}`}>
+                <FilePlus className="w-4 h-4" />
+                {isImportingCSV ? 'Importing...' : 'Bulk Import Students (CSV)'}
+              </button>
+            </Tooltip>
           </div>
         </div>
       </section>

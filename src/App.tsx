@@ -9,6 +9,7 @@ import Noticeboard from './views/Noticeboard';
 import Settings from './views/Settings';
 import StaffView from './views/Staff';
 import LockScreen from './components/LockScreen';
+import GlobalSearch from './components/GlobalSearch';
 
 export default function App() {
   const [currentView, setCurrentView] = useState<ViewType>('dashboard');
@@ -113,14 +114,19 @@ export default function App() {
       />
       
       <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        <header className="bg-white dark:bg-slate-900 border-b border-gray-200 dark:border-cyan-900/30 px-4 py-3 flex items-center gap-4 lg:hidden transition-colors">
-          <button 
-            onClick={() => setIsSidebarOpen(true)}
-            className="p-2 -ml-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-lg"
-          >
-            <Menu className="w-6 h-6" />
-          </button>
-          <span className="font-semibold text-gray-900 capitalize">{currentView}</span>
+        <header className="bg-white dark:bg-slate-900 border-b border-gray-200 dark:border-cyan-900/30 px-4 py-3 flex items-center justify-between gap-4 transition-colors z-10 print:hidden relative shadow-sm">
+          <div className="flex items-center gap-4">
+            <button 
+              onClick={() => setIsSidebarOpen(true)}
+              className="p-2 -ml-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-lg lg:hidden"
+            >
+              <Menu className="w-6 h-6" />
+            </button>
+            <span className="font-semibold text-gray-900 dark:text-slate-100 capitalize hidden lg:block sm:block">{currentView.replace('-', ' ')}</span>
+          </div>
+          <div className="flex-1 max-w-sm lg:max-w-md w-full ml-auto">
+            <GlobalSearch onNavigate={(view) => setCurrentView(view as ViewType)} />
+          </div>
         </header>
 
         <div className="flex-1 overflow-auto p-4 md:p-6 lg:p-8 flex flex-col">

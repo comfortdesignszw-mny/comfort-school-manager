@@ -11,6 +11,7 @@ export default function Dashboard() {
   const staffCount = useLiveQuery(() => db.staff.count(), []) || 0;
   const fees = useLiveQuery(() => db.fees.toArray(), []) || [];
   const studentsList = useLiveQuery(() => db.students.toArray(), []) || [];
+  const classesList = useLiveQuery(() => db.classes.toArray(), []) || [];
   const recentNotices = useLiveQuery(() => db.notices.orderBy('date').reverse().limit(5).toArray(), []) || [];
 
   const paidTransactions = fees.filter(f => f.status === 'Paid');
@@ -56,12 +57,41 @@ export default function Dashboard() {
     { name: 'Jun', intake: 0 },
   ];
 
+  const classData = classesList.map(cls => ({
+    name: cls.name,
+    students: studentsList.filter(s => s.schoolData?.classId === cls.id).length
+  })).filter(c => c.students > 0);
+
+  if (classData.length === 0) {
+    classData.push({ name: 'Class 1', students: 0 }, { name: 'Class 2', students: 0 });
+  }
+
+  // Filter overdue fees
+  const today = new Date().toISOString().split('T')[0];
+  const overdueTransactions = unpaidTransactions.filter(f => f.date < today);
+  const overdueCount = overdueTransactions.length;
+  const overdueSum = overdueTransactions.reduce((sum, f) => sum + f.amount, 0);
+
   return (
     <div className="space-y-6">
       <div>
         <h2 className="text-2xl font-bold text-gray-900 tracking-tight">Dashboard Overview</h2>
         <p className="text-gray-500 mt-1">Real-time stats hub and admin verification panels.</p>
       </div>
+
+      {overdueCount > 0 && (
+        <div className="bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/20 rounded-xl p-4 flex items-start gap-4">
+          <div className="bg-rose-100 dark:bg-rose-500/20 p-2 rounded-full text-rose-600 dark:text-rose-400 mt-0.5">
+            <AlertCircle className="w-5 h-5" />
+          </div>
+          <div className="flex-1">
+            <h3 className="font-bold text-rose-800 dark:text-rose-300">Overdue Balances Detected</h3>
+            <p className="text-sm text-rose-600 dark:text-rose-400/80 mt-1">
+              There are {overdueCount} student {overdueCount === 1 ? 'account' : 'accounts'} with overdue fees totaling ${overdueSum.toLocaleString(undefined, {minimumFractionDigits: 2})}.
+            </p>
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
         <StatCard title="Enrolled Students" value={studentsCount} icon={Users} color="bg-blue-100/80 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400" />
@@ -104,8 +134,30 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Noticeboard Feed */}
+        {/* Enrollment Widget */}
         <div className="glass-card">
+          <h3 className="font-semibold text-lg text-gray-900 mb-4">Student Enrollment by Class</h3>
+          <p className="text-sm text-gray-500 dark:text-cyan-100/50 mb-6">Distribution of enrolled students across the active class structures.</p>
+          <div className="h-72 mt-2">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={classData}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#374151" opacity={0.2} />
+                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12 }} />
+                <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12 }} />
+                <Tooltip 
+                  cursor={{ fill: 'rgba(99, 102, 241, 0.1)' }}
+                  contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                />
+                <Bar dataKey="students" fill="#8b5cf6" radius={[4, 4, 0, 0]} maxBarSize={60} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Noticeboard Feed */}
+        <div className="glass-card col-span-1 lg:col-span-2">
           <h3 className="font-semibold text-lg text-gray-900 mb-4">Recent Notices</h3>
           {recentNotices.length > 0 ? (
             <div className="space-y-4">

@@ -691,8 +691,16 @@ export default function Fees() {
             <tbody className="divide-y divide-gray-100 dark:divide-slate-800 text-sm font-medium">
               {fees.length === 0 ? (
                 <tr>
-                  <td colSpan={isSelectMode ? 8 : 7} className="py-12 text-center text-gray-400 dark:text-cyan-200/40 italic">
-                    No matching billing records found.
+                  <td colSpan={isSelectMode ? 8 : 7} className="py-16 text-center">
+                    <Landmark className="w-16 h-16 mx-auto text-gray-300 dark:text-gray-600 mb-4" strokeWidth={1} />
+                    <h3 className="text-gray-900 dark:text-gray-200 font-bold text-lg mb-1">No billing records found</h3>
+                    <p className="text-gray-500 dark:text-gray-400 text-sm max-w-sm mx-auto mb-4">No fees have been recorded yet or your search query yielded zero results.</p>
+                    <button 
+                      onClick={() => setIsAdding(true)}
+                      className="bg-primary/10 text-primary dark:bg-primary/20 dark:text-cyan-400 px-4 py-2 rounded-lg font-bold text-sm hover:bg-primary/20 transition-colors inline-flex items-center gap-2"
+                    >
+                      <Plus className="w-4 h-4" /> Record New Payment
+                    </button>
                   </td>
                 </tr>
               ) : (

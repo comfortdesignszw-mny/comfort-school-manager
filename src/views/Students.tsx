@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../db';
-import { Search, Plus, X, Upload, Trash2, Edit2, Share2, Download, Users, CheckSquare } from 'lucide-react';
+import { Search, Plus, X, Upload, Trash2, Edit2, Share2, Download, Users, CheckSquare, CreditCard, UserX } from 'lucide-react';
 import type { Student, Guardian } from '../types';
 import { getSettings } from '../db';
 import { downloadPDF } from '../utils/pdf';
@@ -31,24 +31,33 @@ export default function Students() {
 
   return (
     <div className="flex flex-col h-full space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 print:hidden">
         <div>
           <h2 className="text-2xl font-bold text-gray-900 tracking-tight">Students &amp; Attendance</h2>
           <p className="text-gray-500 mt-1">Manage student profiles, guardians, and daily attendance logs.</p>
         </div>
         {activeTab === 'directory' && (
-          <button 
-            onClick={() => setIsAdding(true)}
-            className="bg-primary text-white px-4 py-2 rounded-lg font-medium flex items-center gap-2 hover:bg-primary/90 transition-colors cursor-pointer"
-          >
-            <Plus className="w-4 h-4" />
-            Add Student
-          </button>
+          <div className="flex items-center gap-2">
+            <button 
+              onClick={() => window.print()}
+              className="bg-white dark:bg-slate-800 border border-gray-300 dark:border-cyan-900/40 text-gray-750 dark:text-gray-300 px-4 py-2 rounded-lg font-medium flex items-center gap-2 hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors cursor-pointer shadow-sm"
+            >
+              <Download className="w-4 h-4" />
+              Print List
+            </button>
+            <button 
+              onClick={() => setIsAdding(true)}
+              className="bg-primary text-white px-4 py-2 rounded-lg font-medium flex items-center gap-2 hover:bg-primary/90 transition-colors cursor-pointer shadow-sm"
+            >
+              <Plus className="w-4 h-4" />
+              Add Student
+            </button>
+          </div>
         )}
       </div>
 
       {/* Tabs Switcher */}
-      <div className="flex border-b border-gray-200 dark:border-cyan-900/15">
+      <div className="flex border-b border-gray-200 dark:border-cyan-900/15 print:hidden">
         <button
           onClick={() => setActiveTab('directory')}
           className={`py-2 px-4 font-bold text-xs uppercase tracking-wider border-b-2 transition-all cursor-pointer flex items-center gap-1.5 ${
@@ -75,8 +84,8 @@ export default function Students() {
 
       {activeTab === 'directory' ? (
         <>
-          <div className="table-container">
-            <div className="p-4 border-b border-gray-250 dark:border-cyan-900/20 flex items-center gap-3">
+          <div className="table-container print:border-none print:shadow-none">
+            <div className="p-4 border-b border-gray-250 dark:border-cyan-900/20 flex items-center gap-3 print:hidden">
               <div className="relative flex-1 max-w-md">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-cyan-500/50 w-5 h-5" />
                 <input 
@@ -102,8 +111,16 @@ export default function Students() {
                 <tbody className="divide-y divide-gray-100 dark:divide-cyan-900/10 text-sm">
                   {students?.length === 0 ? (
                     <tr>
-                      <td colSpan={4} className="py-12 text-center text-gray-500 dark:text-cyan-100/40 italic">
-                        No students found.
+                      <td colSpan={4} className="py-16 text-center">
+                        <UserX className="w-16 h-16 mx-auto text-gray-300 dark:text-gray-600 mb-4" strokeWidth={1} />
+                        <h3 className="text-gray-900 dark:text-gray-200 font-bold text-lg mb-1">No students registered</h3>
+                        <p className="text-gray-500 dark:text-gray-400 text-sm max-w-sm mx-auto mb-4">You haven't added any students yet. Register your first student or use the CSV bulk importer in the Settings view.</p>
+                        <button 
+                          onClick={() => setIsAdding(true)}
+                          className="bg-primary/10 text-primary dark:bg-primary/20 dark:text-cyan-400 px-4 py-2 rounded-lg font-bold text-sm hover:bg-primary/20 transition-colors inline-flex items-center gap-2"
+                        >
+                          <Plus className="w-4 h-4" /> Add your first student
+                        </button>
                       </td>
                     </tr>
                   ) : (
@@ -508,6 +525,77 @@ function StudentDetailsModal({ student, onClose, onEdit }: { student: Student, o
     downloadPDF(html, `${student.fullName.replace(/\s+/g, '_')}_Profile.pdf`);
   };
 
+  const generateIDCard = () => {
+    const html = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>${student.fullName} - ID Card</title>
+          <style>
+            body { font-family: system-ui, -apple-system, sans-serif; padding: 20px; display: flex; justify-content: center; }
+            .id-card { 
+              width: 320px; 
+              height: 480px; 
+              border: 1px solid #ccc; 
+              border-radius: 12px; 
+              position: relative; 
+              overflow: hidden; 
+              box-shadow: 0 4px 6px rgba(0,0,0,0.1); 
+              display: flex; 
+              flex-direction: column;
+              text-align: center;
+              font-family: inherit;
+              box-sizing: border-box;
+            }
+            .header-strip { background-color: ${settings.themeColor}; height: 80px; position: absolute; top: 0; left: 0; width: 100%; z-index: 1; }
+            .content-wrapper { z-index: 2; display: flex; flex-direction: column; align-items: center; padding: 20px; height: 100%; box-sizing: border-box;}
+            .school-logo { width: 50px; height: 50px; object-fit: contain; background: white; border-radius: 50%; padding: 4px; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-top: 10px; margin-bottom: 5px; }
+            .school-name { font-size: 14px; font-weight: bold; color: white; margin-bottom: 30px; text-shadow: 0 1px 2px rgba(0,0,0,0.3); }
+            .photo { width: 130px; height: 130px; border-radius: 50%; object-fit: cover; border: 4px solid white; box-shadow: 0 4px 8px rgba(0,0,0,0.2); margin-top: -15px; background: #EEE; }
+            .name { font-size: 22px; font-weight: 800; color: #111; margin-top: 15px; margin-bottom: 2px; line-height: 1.1; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+            .role { font-size: 13px; color: ${settings.themeColor}; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 15px; }
+            .info-grid { display: flex; justify-content: space-around; width: 100%; border-top: 1px dashed #DDD; border-bottom: 1px dashed #DDD; padding: 10px 0; margin-bottom: 15px; }
+            .info-block { display: flex; flex-direction: column; }
+            .info-label { font-size: 10px; color: #777; text-transform: uppercase; margin-bottom: 2px; font-weight: 600; }
+            .info-value { font-size: 13px; color: #333; font-weight: bold; }
+            .qr-code { width: 60px; height: 60px; margin-top: auto; }
+            .footer { position: absolute; bottom: 0; left: 0; width: 100%; height: 6px; background-color: ${settings.themeColor}; }
+            .barcode-fallback { display: block; width: 80%; height: 30px; background: repeating-linear-gradient(90deg, #000, #000 2px, #fff 2px, #fff 4px); margin: auto; opacity: 0.8;}
+          </style>
+        </head>
+        <body>
+          <div class="id-card">
+            <div class="header-strip"></div>
+            <div class="content-wrapper">
+              ${settings.schoolLogo ? `<img src="${settings.schoolLogo}" class="school-logo" />` : '<div style="height:20px; width:100%;"></div>'}
+              <div class="school-name">${settings.schoolName || 'School Name'}</div>
+              
+              ${student.profilePhoto ? `<img src="${student.profilePhoto}" class="photo" />` : `<div class="photo" style="display:flex;align-items:center;justify-content:center;font-size:40px;color:#999;font-weight:bold;">${student.fullName.charAt(0)}</div>`}
+              <div class="name">${student.fullName}</div>
+              <div class="role">Student</div>
+
+              <div class="info-grid">
+                <div class="info-block">
+                  <span class="info-label">ID Number</span>
+                  <span class="info-value">${student.nationalId || '-'}</span>
+                </div>
+                <div class="info-block">
+                  <span class="info-label">Class</span>
+                  <span class="info-value">${assignedClass?.name || 'Unassigned'}</span>
+                </div>
+              </div>
+
+              ${student.nationalId ? `<img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(student.nationalId || student.id?.toString() || 'student')}" class="qr-code" crossorigin="anonymous" />` : `<div class="barcode-fallback"></div>`}
+            </div>
+            <div class="footer"></div>
+          </div>
+        </body>
+      </html>
+    `;
+
+    downloadPDF(html, `${student.fullName.replace(/\s+/g, '_')}_IDCard.pdf`);
+  };
+
   return (
     <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
       <div className="bg-white dark:bg-slate-900 border dark:border-cyan-900/30 rounded-xl shadow-xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
@@ -535,6 +623,11 @@ function StudentDetailsModal({ student, onClose, onEdit }: { student: Student, o
             <Tooltip content="Copy student sharing text summary">
               <button onClick={handleShare} className="p-2 text-gray-450 dark:text-cyan-200 hover:text-primary dark:hover:text-cyan-400 bg-gray-100 dark:bg-slate-800 rounded-full transition-colors cursor-pointer" title="Share Student Record">
                 <Share2 className="w-4 h-4"/>
+              </button>
+            </Tooltip>
+            <Tooltip content="Download Printable ID Card Card">
+              <button onClick={generateIDCard} className="p-2 text-gray-450 dark:text-cyan-200 hover:text-primary dark:hover:text-cyan-400 bg-gray-100 dark:bg-slate-800 rounded-full transition-colors cursor-pointer" title="Download ID Card">
+                <CreditCard className="w-4 h-4"/>
               </button>
             </Tooltip>
             <Tooltip content="Export full profile as PDF report">
