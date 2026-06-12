@@ -70,7 +70,7 @@ export const downloadElementAsPDF = (element: HTMLElement, filename: string, isI
     margin:       isIDCard ? 0 : 10,
     filename:     filename,
     image:        { type: 'jpeg' as const, quality: 1 },
-    pagebreak:    isIDCard ? { mode: ['avoid-all'] } : undefined,
+    pagebreak:    isIDCard ? { mode: ['avoid-all'] } : { mode: ['css', 'legacy'] },
     html2canvas:  { 
       scale: isMobile ? 3 : 4, 
       useCORS: true, 
@@ -147,7 +147,7 @@ export const downloadPDF = (htmlString: string, filename: string) => {
         margin:       isIDCard ? 0 : 10,
         filename:     filename,
         image:        { type: 'jpeg' as const, quality: 1 },
-        pagebreak:    isIDCard ? { mode: ['avoid-all'] } : undefined,
+        pagebreak:    isIDCard ? { mode: ['avoid-all'] } : { mode: ['css', 'legacy'] },
         html2canvas:  { 
           scale: isMobile ? 3 : 4, 
           useCORS: true, 

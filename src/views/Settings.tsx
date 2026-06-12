@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useLiveQuery } from 'dexie-react-hooks';
 import { getSettings, saveSettings } from '../db';
 import { backupData, restoreData } from '../utils/backup';
 import { Download, Upload, Lock, Unlock, ShieldCheck, Key, FilePlus } from 'lucide-react';
@@ -11,6 +12,19 @@ export default function Settings() {
   const [settings, setSettings] = useState<AppSettings>(getSettings());
   const [isRestoring, setIsRestoring] = useState(false);
   const [isImportingCSV, setIsImportingCSV] = useState(false);
+
+  // Real-time Database Stats count for Backup/Restore Information
+  const dbStats = useLiveQuery(async () => {
+    return {
+      students: await db.students.count(),
+      classes: await db.classes.count(),
+      fees: await db.fees.count(),
+      notices: await db.notices.count(),
+      staff: await db.staff.count(),
+      attendance: await db.attendance.count(),
+      calendarEvents: await db.calendarEvents.count(),
+    };
+  }) || { students: 0, classes: 0, fees: 0, notices: 0, staff: 0, attendance: 0, calendarEvents: 0 };
 
   // App Lock system states
   const [appLockEnabled, setAppLockEnabled] = useState(() => {
@@ -477,47 +491,95 @@ export default function Settings() {
 
       {/* Backup and restore with optimized contrast styles */}
       <section className="glass-card space-y-6">
-        <h3 className="text-lg font-bold text-gray-950 dark:text-white border-b border-gray-100 dark:border-cyan-900/30 pb-2">Export / Import Database (JSON)</h3>
+        <h3 className="text-lg font-bold text-gray-950 dark:text-white border-b border-gray-100 dark:border-cyan-900/30 pb-2 flex items-center gap-2">
+          Backup, Restore & Data Centre
+        </h3>
         <p className="text-sm text-gray-650 dark:text-cyan-100/70 leading-relaxed animate-none">
-          This system runs entirely offline in your browser. Export the entire local database state as a JSON file to prevent data loss or import it back to restore the system state.
+          This system runs entirely offline inside your browser. Generate regular backups using the export tool below to create a secure safety net, or import a previously exported dataset to restore all school records instantly.
         </p>
-        <div className="flex flex-wrap gap-4 pt-2">
-          <button 
-            onClick={backupData}
-            className="flex items-center gap-2 px-5 py-2.5 bg-primary text-white font-bold rounded-lg hover:bg-primary/95 transition-all shadow-xs cursor-pointer text-sm"
-          >
-            <Download className="w-4 h-4" />
-            Export DB to JSON
-          </button>
-          
-          <div className="relative">
-             <input 
-              type="file" 
-              accept=".json"
-              onChange={handleRestore}
-              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed animate-none"
-              disabled={isRestoring}
-            />
-            <button className={`flex items-center gap-2 px-5 py-2.5 border border-gray-300 dark:border-cyan-900/40 text-gray-750 dark:text-cyan-200 font-bold rounded-lg transition-all bg-white dark:bg-slate-800 text-sm ${isRestoring ? 'opacity-50' : 'hover:bg-gray-100 dark:hover:bg-slate-700'}`}>
-              <Upload className="w-4 h-4" />
-              {isRestoring ? 'Restoring...' : 'Import DB from JSON'}
+
+        {/* Database Inventory Metrics Grid */}
+        <div className="bg-gray-50/50 dark:bg-slate-950/20 border border-gray-150 dark:border-cyan-900/10 p-4 rounded-xl space-y-4 text-left">
+          <h4 className="text-xs font-bold text-gray-500 dark:text-cyan-200/50 uppercase tracking-widest">Active Database Record Inventory</h4>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
+            <div className="p-3 bg-white dark:bg-slate-800 rounded-lg border border-gray-100 dark:border-cyan-950/20 shadow-2xs">
+              <span className="block text-2xl font-extrabold text-primary dark:text-cyan-400">{dbStats.students}</span>
+              <span className="text-[10px] uppercase font-bold text-gray-450 dark:text-cyan-250 block mt-1">Students</span>
+            </div>
+            <div className="p-3 bg-white dark:bg-slate-800 rounded-lg border border-gray-105 dark:border-cyan-950/20 shadow-2xs">
+              <span className="block text-2xl font-extrabold text-[#0056b3] dark:text-emerald-400">{dbStats.classes}</span>
+              <span className="text-[10px] uppercase font-bold text-gray-450 dark:text-cyan-250 block mt-1">Classes</span>
+            </div>
+            <div className="p-3 bg-white dark:bg-slate-800 rounded-lg border border-gray-105 dark:border-cyan-950/20 shadow-2xs">
+              <span className="block text-2xl font-extrabold text-emerald-600 dark:text-teal-400">{dbStats.fees}</span>
+              <span className="text-[10px] uppercase font-bold text-gray-450 dark:text-cyan-250 block mt-1">Fee Ledger</span>
+            </div>
+            <div className="p-3 bg-white dark:bg-slate-800 rounded-lg border border-gray-105 dark:border-cyan-950/20 shadow-2xs">
+              <span className="block text-2xl font-extrabold text-amber-500 dark:text-amber-400">{dbStats.staff}</span>
+              <span className="text-[10px] uppercase font-bold text-gray-450 dark:text-cyan-250 block mt-1">Staff List</span>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1 text-center font-medium">
+            <div className="p-2 sm:p-2.5 bg-white dark:bg-slate-850 rounded-lg border border-gray-100 dark:border-cyan-950/15">
+              <span className="text-gray-500 dark:text-cyan-200/60 text-xs mr-1 font-semibold">Attendance Logs:</span>
+              <span className="font-extrabold text-sm text-gray-900 dark:text-white">{dbStats.attendance}</span>
+            </div>
+            <div className="p-2 sm:p-2.5 bg-white dark:bg-slate-850 rounded-lg border border-gray-100 dark:border-cyan-950/15">
+              <span className="text-gray-500 dark:text-cyan-200/60 text-xs mr-1 font-semibold">Calendar Tasks:</span>
+              <span className="font-extrabold text-sm text-gray-900 dark:text-white">{dbStats.calendarEvents}</span>
+            </div>
+            <div className="p-2 sm:p-2.5 bg-white dark:bg-slate-850 rounded-lg border border-gray-100 dark:border-cyan-950/15">
+              <span className="text-gray-500 dark:text-cyan-200/60 text-xs mr-1 font-semibold">Saved Bulletins:</span>
+              <span className="font-extrabold text-sm text-gray-900 dark:text-white">{dbStats.notices}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Action Controls */}
+        <div className="flex flex-col gap-4 border-t border-gray-200/50 dark:border-slate-800/60 pt-4 mt-2">
+          <div className="flex flex-wrap gap-3.5">
+            <button 
+              onClick={backupData}
+              className="flex items-center gap-2 px-5 py-2.5 bg-primary text-white font-bold rounded-lg hover:bg-primary/95 transition-all shadow-xs cursor-pointer text-sm"
+              title="Download entire current database state as a JSON document to your device."
+            >
+              <Download className="w-4 h-4" />
+              Export DB to JSON
             </button>
+            
+            <div className="relative">
+              <input 
+                type="file" 
+                accept=".json"
+                onChange={handleRestore}
+                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed animate-none"
+                disabled={isRestoring}
+              />
+              <button type="button" className={`flex items-center gap-2 px-5 py-2.5 border border-gray-300 dark:border-cyan-900/40 text-gray-750 dark:text-cyan-200 font-bold rounded-lg transition-all bg-white dark:bg-slate-800 text-sm ${isRestoring ? 'opacity-50' : 'hover:bg-gray-100 dark:hover:bg-slate-700'} pointer-events-none`}>
+                <Upload className="w-4 h-4" />
+                {isRestoring ? 'Restoring...' : 'Import DB from JSON'}
+              </button>
+            </div>
+
+            <div className="relative">
+              <input 
+                type="file" 
+                accept=".csv"
+                onChange={handleCSVImport}
+                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed animate-none flex-1"
+                disabled={isImportingCSV}
+              />
+              <Tooltip content="Import student profiles via CSV. Must contain 'fullName' and 'nationalId' or 'studentId' columns.">
+                <button type="button" className={`flex w-full items-center gap-2 px-5 py-2.5 border border-emerald-500/30 text-emerald-700 dark:text-emerald-400 font-bold rounded-lg transition-all bg-emerald-50 dark:bg-emerald-500/10 text-sm ${isImportingCSV ? 'opacity-50 font-semibold' : 'hover:bg-emerald-100 dark:hover:bg-emerald-500/20 font-bold'} pointer-events-none`}>
+                  <FilePlus className="w-4 h-4" />
+                  {isImportingCSV ? 'Importing...' : 'Bulk Import Students (CSV)'}
+                </button>
+              </Tooltip>
+            </div>
           </div>
 
-          <div className="relative">
-             <input 
-              type="file" 
-              accept=".csv"
-              onChange={handleCSVImport}
-              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed animate-none flex-1"
-              disabled={isImportingCSV}
-            />
-            <Tooltip content="Import student profiles via CSV. Must contain 'fullName' and 'nationalId' or 'studentId' columns.">
-              <button className={`flex w-full items-center gap-2 px-5 py-2.5 border border-emerald-500/30 text-emerald-700 dark:text-emerald-400 font-bold rounded-lg transition-all bg-emerald-50 dark:bg-emerald-500/10 text-sm ${isImportingCSV ? 'opacity-50' : 'hover:bg-emerald-100 dark:hover:bg-emerald-500/20'}`}>
-                <FilePlus className="w-4 h-4" />
-                {isImportingCSV ? 'Importing...' : 'Bulk Import Students (CSV)'}
-              </button>
-            </Tooltip>
+          <div className="bg-amber-500/5 dark:bg-amber-500/10 border border-amber-500/15 rounded-lg p-3 text-xs text-amber-850 dark:text-amber-400 font-medium leading-relaxed text-left">
+            ⚠️ <strong>Safety Warning:</strong> Restoring data completely overwrites all current records. Make sure you export a backup first before importing to safeguard your school operations.
           </div>
         </div>
       </section>

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db, getSettings } from '../db';
-import { Plus, Trash2, Edit2, Share2, Download, AlertCircle } from 'lucide-react';
+import { Plus, Trash2, Edit2, Share2, Download, AlertCircle, X } from 'lucide-react';
 import { downloadPDF } from '../utils/pdf';
 import Tooltip from '../components/Tooltip';
 
@@ -195,31 +195,38 @@ function NoticeModal({ onClose, notice }: { onClose: () => void; notice?: any })
 
   return (
     <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-      <div className="bg-white dark:bg-slate-900 border dark:border-cyan-900/30 rounded-xl shadow-xl w-full max-w-lg p-6 overflow-hidden">
-        <h3 className="font-bold text-lg mb-4 text-gray-950 dark:text-white border-b dark:border-cyan-900/20 pb-2">
-          {notice ? 'Edit Published Notice' : 'Post New Notice'}
-        </h3>
-        <form onSubmit={handleSave} className="space-y-4">
-          <div>
-            <label className="block text-xs font-bold text-gray-500 dark:text-cyan-100/60 uppercase tracking-wider mb-1">Title</label>
-            <input required type="text" value={title} onChange={e=>setTitle(e.target.value)} className="input-field" placeholder="e.g. Term end examinations schedule" />
+      <div className="bg-white dark:bg-slate-900 border dark:border-cyan-900/30 rounded-xl shadow-xl w-full max-w-lg flex flex-col max-h-[85vh] overflow-hidden">
+        <div className="flex justify-between items-center p-5 border-b dark:border-cyan-900/10 bg-gray-50/50 dark:bg-slate-950/20">
+          <h3 className="font-bold text-lg text-gray-950 dark:text-white">
+            {notice ? 'Edit Published Notice' : 'Post New Notice'}
+          </h3>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-650 dark:hover:text-cyan-400 cursor-pointer p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-800">
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+        <form onSubmit={handleSave} className="flex-1 flex flex-col min-h-0">
+          <div className="p-6 space-y-4 overflow-y-auto flex-1 min-h-0 text-left">
+            <div>
+              <label className="block text-xs font-bold text-gray-500 dark:text-cyan-100/60 uppercase tracking-wider mb-1">Title</label>
+              <input required type="text" value={title} onChange={e=>setTitle(e.target.value)} className="input-field" placeholder="e.g. Term end examinations schedule" />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-gray-500 dark:text-cyan-100/60 uppercase tracking-wider mb-1">Audience</label>
+              <select value={audience} onChange={e=>setAudience(e.target.value as any)} className="input-field">
+                <option value="All">All Audiences</option>
+                <option value="Parents">Parents ONLY</option>
+                <option value="Teachers">Teachers ONLY</option>
+                <option value="Students">Students ONLY</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-gray-500 dark:text-cyan-100/60 uppercase tracking-wider mb-1">Content message</label>
+              <textarea required rows={5} value={content} onChange={e=>setContent(e.target.value)} className="input-field" placeholder="Write notice details..." />
+            </div>
           </div>
-          <div>
-            <label className="block text-xs font-bold text-gray-500 dark:text-cyan-100/60 uppercase tracking-wider mb-1">Audience</label>
-            <select value={audience} onChange={e=>setAudience(e.target.value as any)} className="input-field">
-              <option value="All">All Audiences</option>
-              <option value="Parents">Parents ONLY</option>
-              <option value="Teachers">Teachers ONLY</option>
-              <option value="Students">Students ONLY</option>
-            </select>
-          </div>
-          <div>
-            <label className="block text-xs font-bold text-gray-500 dark:text-cyan-100/60 uppercase tracking-wider mb-1">Content message</label>
-            <textarea required rows={5} value={content} onChange={e=>setContent(e.target.value)} className="input-field" placeholder="Write notice details..." />
-          </div>
-          <div className="flex justify-end gap-3 pt-4 border-t dark:border-cyan-900/10">
-            <button onClick={onClose} type="button" className="px-4 py-2 border border-gray-300 dark:border-cyan-900/40 rounded-lg text-sm text-gray-700 dark:text-cyan-150/70 hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors">Cancel</button>
-            <button type="submit" className="px-4 py-2 bg-primary text-white text-sm font-semibold rounded-lg hover:bg-primary/90 transition-colors">
+          <div className="flex justify-end gap-3 p-5 border-t dark:border-cyan-900/10 bg-gray-50/50 dark:bg-slate-950/10 shrink-0">
+            <button onClick={onClose} type="button" className="px-4 py-2 border border-gray-300 dark:border-cyan-900/40 rounded-lg text-sm text-gray-700 dark:text-cyan-150/70 hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors cursor-pointer">Cancel</button>
+            <button type="submit" className="px-4 py-2 bg-primary text-white text-sm font-semibold rounded-lg hover:bg-primary/95 transition-colors cursor-pointer">
               {notice ? 'Save Changes' : 'Publish Notice'}
             </button>
           </div>

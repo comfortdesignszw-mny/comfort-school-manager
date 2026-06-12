@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, ArrowLeft } from 'lucide-react';
 import Sidebar, { type ViewType } from './components/Sidebar';
 import Dashboard from './views/Dashboard';
 import Students from './views/Students';
@@ -115,14 +115,25 @@ export default function App() {
       
       <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
         <header className="bg-white dark:bg-slate-900 border-b border-gray-200 dark:border-cyan-900/30 px-4 py-3 flex items-center justify-between gap-4 transition-colors z-10 print:hidden relative shadow-sm">
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
             <button 
               onClick={() => setIsSidebarOpen(true)}
-              className="p-2 -ml-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-lg lg:hidden"
+              className="p-2 -ml-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-lg lg:hidden cursor-pointer"
             >
               <Menu className="w-6 h-6" />
             </button>
-            <span className="font-semibold text-gray-900 dark:text-slate-100 capitalize hidden lg:block sm:block">{currentView.replace('-', ' ')}</span>
+            {currentView !== 'dashboard' ? (
+              <button
+                onClick={() => setCurrentView('dashboard')}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-150/70 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-700 text-gray-750 dark:text-gray-250 text-xs font-bold rounded-lg transition-colors cursor-pointer shadow-xs border border-gray-250 dark:border-cyan-900/35 hover:scale-[1.02] active:scale-95"
+                title="Return to Dashboard Home"
+              >
+                <ArrowLeft className="w-4 h-4 text-primary dark:text-cyan-400" />
+                <span>Back to Dashboard</span>
+              </button>
+            ) : (
+              <span className="font-semibold text-gray-900 dark:text-slate-100 capitalize hidden lg:block sm:block">{currentView.replace('-', ' ')}</span>
+            )}
           </div>
           <div className="flex-1 max-w-sm lg:max-w-md w-full ml-auto">
             <GlobalSearch onNavigate={(view) => setCurrentView(view as ViewType)} />

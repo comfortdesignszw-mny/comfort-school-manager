@@ -4,6 +4,7 @@ import { db, getSettings } from '../db';
 import { Plus, Download, CheckCircle, AlertCircle, HelpCircle, X, Search, Landmark, Edit2, Trash2, Share2, CheckSquare, Square } from 'lucide-react';
 import { downloadPDF } from '../utils/pdf';
 import Tooltip from '../components/Tooltip';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Legend } from 'recharts';
 
 export default function Fees() {
   const [isAdding, setIsAdding] = useState(false);
@@ -224,6 +225,54 @@ export default function Fees() {
     });
   }, [searchQuery, statusFilter]) || [];
 
+  const allFeesForChart = useLiveQuery(() => db.fees.toArray()) || [];
+
+  const monthlyChartData = React.useMemo(() => {
+    const months = [
+      { name: 'Jan', fullname: 'January' },
+      { name: 'Feb', fullname: 'February' },
+      { name: 'Mar', fullname: 'March' },
+      { name: 'Apr', fullname: 'April' },
+      { name: 'May', fullname: 'May' },
+      { name: 'Jun', fullname: 'June' },
+      { name: 'Jul', fullname: 'July' },
+      { name: 'Aug', fullname: 'August' },
+      { name: 'Sep', fullname: 'September' },
+      { name: 'Oct', fullname: 'October' },
+      { name: 'Nov', fullname: 'November' },
+      { name: 'Dec', fullname: 'December' }
+    ];
+
+    const currentYear = new Date().getFullYear();
+
+    const data = months.map(m => ({
+      name: m.name,
+      fullname: m.fullname,
+      Paid: 0,
+      Arrears: 0,
+      Total: 0
+    }));
+
+    allFeesForChart.forEach(f => {
+      if (!f.date) return;
+      const date = new Date(f.date);
+      if (date.getFullYear() === currentYear) {
+        const mIdx = date.getMonth();
+        if (mIdx >= 0 && mIdx < 12) {
+          const amt = f.amount || 0;
+          if (f.status === 'Paid') {
+            data[mIdx].Paid += amt;
+          } else {
+            data[mIdx].Arrears += amt;
+          }
+          data[mIdx].Total += amt;
+        }
+      }
+    });
+
+    return data;
+  }, [allFeesForChart]);
+
   // Totals calculations
   const totalPaidSum = fees.filter(f => f.status === 'Paid').reduce((sum, f) => sum + f.amount, 0);
   const totalUnpaidSum = fees.filter(f => f.status === 'Unpaid').reduce((sum, f) => sum + f.amount, 0);
@@ -405,6 +454,72 @@ export default function Fees() {
             <span className="text-xs font-semibold text-rose-600 dark:text-rose-400 uppercase tracking-widest block">Total Unpaid Arrears</span>
             <span className="text-xl font-bold text-gray-900">${totalUnpaidSum.toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
           </div>
+        </div>
+      </div>
+
+      {/* Monthly Fee Collection Trends Chart */}
+      <div className="bg-white dark:bg-slate-900 border border-gray-150 dark:border-cyan-900/30 p-5 rounded-xl flex flex-col justify-between min-h-[350px]">
+        <div>
+          <h3 className="font-bold text-lg text-gray-950 dark:text-white">Fee Collection & Arrears Trends</h3>
+          <p className="text-xs text-gray-400 mt-0.5">Monthly breakdown of recorded fee collections vs outstanding arrears for the current year</p>
+        </div>
+        <div className="w-full h-64 mt-4">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart
+              data={monthlyChartData}
+              margin={{ top: 20, right: 10, left: -20, bottom: 0 }}
+            >
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" opacity={0.15} className="dark:stroke-slate-800" />
+              <XAxis 
+                dataKey="name" 
+                stroke="#94A3B8" 
+                fontSize={11} 
+                tickLine={false} 
+                axisLine={false}
+              />
+              <YAxis 
+                stroke="#94A3B8" 
+                fontSize={11} 
+                tickLine={false} 
+                axisLine={false} 
+                tickFormatter={(value) => `$${value}`}
+              />
+              <RechartsTooltip 
+                contentStyle={{ 
+                  backgroundColor: '#0F172A', 
+                  border: 'none', 
+                  borderRadius: '8px', 
+                  color: '#FFF',
+                  fontSize: '12px'
+                }}
+                formatter={(value: any) => [`$${Number(value).toLocaleString()}`]}
+              />
+              <Legend 
+                verticalAlign="top" 
+                height={36} 
+                iconType="circle"
+                iconSize={8}
+                wrapperStyle={{ fontSize: '11px', fontWeight: 'bold' }}
+              />
+              <Bar 
+                name="Collected Fees ($)" 
+                dataKey="Paid" 
+                fill="#10B981" 
+                radius={[4, 4, 0, 0]}
+                maxBarSize={25}
+              />
+              <Bar 
+                name="Outstanding Arrears ($)" 
+                dataKey="Arrears" 
+                fill="#F43F5E" 
+                radius={[4, 4, 0, 0]}
+                maxBarSize={25}
+              />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+        <div className="text-[10px] text-gray-400 dark:text-cyan-200/30 italic text-center mt-2">
+          This chart represents real financial intake trends calculated dynamically from matching recorded database transactions.
         </div>
       </div>
 
@@ -926,13 +1041,18 @@ function FeeModal({ onClose }: { onClose: () => void }) {
 
   return (
     <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-      <div className="bg-white dark:bg-slate-900 border dark:border-cyan-900/40 rounded-xl shadow-xl w-full max-w-md overflow-hidden">
-        <div className="flex justify-between items-center p-4 border-b dark:border-cyan-900/10 bg-gray-50/50">
-          <h3 className="font-bold text-lg text-gray-900 flex items-center gap-2"><Landmark className="w-5 h-5 text-primary" /> Record Tuition Fees</h3>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600"><X className="w-5 h-5"/></button>
+      <div className="bg-white dark:bg-slate-900 border dark:border-cyan-900/40 rounded-xl shadow-xl w-full max-w-md flex flex-col max-h-[85vh] overflow-hidden">
+        <div className="flex justify-between items-center p-4 border-b dark:border-cyan-900/10 bg-gray-50/50 dark:bg-slate-950/20">
+          <h3 className="font-bold text-lg text-gray-900 dark:text-white flex items-center gap-2">
+            <Landmark className="w-5 h-5 text-primary" /> Record Tuition Fees
+          </h3>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 dark:hover:text-cyan-400 p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-800 cursor-pointer">
+            <X className="w-5 h-5"/>
+          </button>
         </div>
 
-        <form onSubmit={handleSave} className="p-6 space-y-4">
+        <form onSubmit={handleSave} className="flex-1 flex flex-col min-h-0">
+          <div className="p-6 space-y-4 overflow-y-auto flex-1 min-h-0 text-left">
           <div className="bg-gray-50 p-2.5 rounded-lg flex justify-between gap-2 border border-gray-150">
             <button 
               type="button" 
@@ -1023,9 +1143,10 @@ function FeeModal({ onClose }: { onClose: () => void }) {
             </div>
           )}
 
-          <div className="flex justify-end gap-3 pt-4 border-t dark:border-cyan-900/10">
-            <button onClick={onClose} type="button" className="px-4 py-2 border dark:border-cyan-900/30 rounded-lg text-sm text-gray-700 hover:bg-gray-50 transition-colors">Cancel</button>
-            <button type="submit" className="px-4 py-2 bg-primary text-white rounded-lg text-sm font-semibold hover:bg-primary/95 transition-colors">Save Record</button>
+          </div>
+          <div className="flex justify-end gap-3 p-5 border-t dark:border-cyan-900/10 bg-gray-50/50 dark:bg-slate-950/10 shrink-0">
+            <button onClick={onClose} type="button" className="px-4 py-2 border dark:border-cyan-900/30 rounded-lg text-sm text-gray-750 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors cursor-pointer">Cancel</button>
+            <button type="submit" className="px-4 py-2 bg-primary text-white rounded-lg text-sm font-semibold hover:bg-primary/95 transition-colors cursor-pointer">Save Record</button>
           </div>
         </form>
       </div>
@@ -1060,80 +1181,82 @@ function IndividualEditModal({ fee, onClose }: { fee: any; onClose: () => void }
 
   return (
     <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-      <div className="bg-white dark:bg-slate-900 border dark:border-cyan-900/40 rounded-xl shadow-xl w-full max-w-md overflow-hidden relative">
+      <div className="bg-white dark:bg-slate-900 border dark:border-cyan-900/40 rounded-xl shadow-xl w-full max-w-md flex flex-col max-h-[85vh] overflow-hidden">
         <div className="flex justify-between items-center p-4 border-b dark:border-cyan-900/10 bg-gray-50/50 dark:bg-slate-950/20">
           <h3 className="font-bold text-lg text-gray-900 dark:text-white flex items-center gap-2">
             <Edit2 className="w-5 h-5 text-primary" /> Edit Billing Record
           </h3>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 dark:hover:text-cyan-400 cursor-pointer">
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 dark:hover:text-cyan-400 cursor-pointer p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-800">
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        <form onSubmit={handleSave} className="p-6 space-y-4">
-          <div>
-            <label className="block text-xs font-bold text-gray-500 dark:text-cyan-200/55 uppercase tracking-wider mb-1">Student Name</label>
-            <input 
-              required 
-              type="text" 
-              value={studentName} 
-              onChange={e => setStudentName(e.target.value)} 
-              className="input-field" 
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
+        <form onSubmit={handleSave} className="flex-1 flex flex-col min-h-0">
+          <div className="p-6 space-y-4 overflow-y-auto flex-1 min-h-0 text-left">
             <div>
-              <label className="block text-xs font-bold text-gray-500 dark:text-cyan-200/55 uppercase tracking-wider mb-1">Term / Month</label>
+              <label className="block text-xs font-bold text-gray-500 dark:text-cyan-200/55 uppercase tracking-wider mb-1">Student Name</label>
               <input 
                 required 
                 type="text" 
-                value={term} 
-                onChange={e => setTerm(e.target.value)} 
+                value={studentName} 
+                onChange={e => setStudentName(e.target.value)} 
                 className="input-field" 
               />
             </div>
-            <div>
-              <label className="block text-xs font-bold text-gray-500 dark:text-cyan-200/55 uppercase tracking-wider mb-1">Receipt Number</label>
-              <input 
-                type="text" 
-                value={receipt} 
-                onChange={e => setReceipt(e.target.value)} 
-                className="input-field" 
-                placeholder="Leave blank for unpaid"
-              />
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-bold text-gray-500 dark:text-cyan-200/55 uppercase tracking-wider mb-1">Term / Month</label>
+                <input 
+                  required 
+                  type="text" 
+                  value={term} 
+                  onChange={e => setTerm(e.target.value)} 
+                  className="input-field" 
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-gray-500 dark:text-cyan-200/55 uppercase tracking-wider mb-1">Receipt Number</label>
+                <input 
+                  type="text" 
+                  value={receipt} 
+                  onChange={e => setReceipt(e.target.value)} 
+                  className="input-field" 
+                  placeholder="Leave blank for unpaid"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-bold text-gray-500 dark:text-cyan-200/55 uppercase tracking-wider mb-1">Amount ($)</label>
+                <input 
+                  required 
+                  type="number" 
+                  step="0.01" 
+                  value={amount} 
+                  onChange={e => setAmount(e.target.value)} 
+                  className="input-field" 
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-gray-450 dark:text-cyan-200/55 uppercase tracking-wider mb-1 font-bold">Status</label>
+                <select 
+                  value={status} 
+                  onChange={e => setStatus(e.target.value as any)} 
+                  className="input-field"
+                >
+                  <option value="Paid">Paid</option>
+                  <option value="Partial">Partial</option>
+                  <option value="Unpaid">Unpaid</option>
+                </select>
+              </div>
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs font-bold text-gray-500 dark:text-cyan-200/55 uppercase tracking-wider mb-1">Amount ($)</label>
-              <input 
-                required 
-                type="number" 
-                step="0.01" 
-                value={amount} 
-                onChange={e => setAmount(e.target.value)} 
-                className="input-field" 
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1 font-bold">Status</label>
-              <select 
-                value={status} 
-                onChange={e => setStatus(e.target.value as any)} 
-                className="input-field"
-              >
-                <option value="Paid">Paid</option>
-                <option value="Partial">Partial</option>
-                <option value="Unpaid">Unpaid</option>
-              </select>
-            </div>
-          </div>
-
-          <div className="flex justify-end gap-3 pt-4 border-t dark:border-cyan-900/10">
-            <button onClick={onClose} type="button" className="px-4 py-2 border dark:border-cyan-900/30 rounded-lg text-sm text-gray-700 dark:text-slate-250 hover:bg-gray-55 dark:hover:bg-slate-800 transition-colors">Cancel</button>
-            <button type="submit" className="px-4 py-2 bg-primary text-white rounded-lg text-sm font-semibold hover:bg-primary/95 transition-colors">Save Changes</button>
+          <div className="flex justify-end gap-3 p-5 border-t dark:border-cyan-900/10 bg-gray-50/50 dark:bg-slate-950/10 shrink-0">
+            <button onClick={onClose} type="button" className="px-4 py-2 border dark:border-cyan-900/30 rounded-lg text-sm text-gray-750 dark:text-slate-250 hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors cursor-pointer">Cancel</button>
+            <button type="submit" className="px-4 py-2 bg-primary text-white rounded-lg text-sm font-semibold hover:bg-primary/95 transition-colors cursor-pointer">Save Changes</button>
           </div>
         </form>
       </div>

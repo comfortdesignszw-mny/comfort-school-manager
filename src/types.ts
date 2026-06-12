@@ -57,6 +57,7 @@ export interface AppSettings {
   schoolLogo: string;
   schoolMotto: string;
   schoolContact: string;
+  schoolPhone: string;
   schoolAddress: string;
   systemMode: 'Primary' | 'Secondary' | 'Tertiary';
   themeColor: string;

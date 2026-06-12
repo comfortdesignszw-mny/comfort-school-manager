@@ -56,6 +56,283 @@ export default function Students() {
     }
   };
 
+  const handlePrintStudentList = async () => {
+    try {
+      const allStudents = await db.students.reverse().toArray();
+      const classes = await db.classes.toArray();
+      const classMap = new Map(classes.map(c => [c.id, c.name]));
+      
+      const themeColor = settings.themeColor || '#0284c7';
+      const logoHtml = settings.schoolLogo 
+        ? `<div class="logo-wrapper"><img src="${settings.schoolLogo}" alt="School Logo" class="logo" /></div>`
+        : '';
+
+      const studentRows = allStudents.map((s, idx) => {
+        const className = s.schoolData?.classId 
+          ? (classMap.get(s.schoolData.classId) || `Class #${s.schoolData.classId}`) 
+          : 'Unassigned';
+        const guardianList = s.guardianData && s.guardianData.length > 0 
+          ? s.guardianData.map(g => `<strong>${g.name}</strong> (${g.relation})<br/>📞 ${g.contact}`).join('<div style="margin-top: 4px; border-top: 1px dashed #e2e8f0; padding-top: 4px;"></div>') 
+          : '<span style="color: #94a3b8; font-style: italic;">No guardians recorded</span>';
+        return `
+          <tr>
+            <td style="text-align: center; font-weight: 600; color: #64748b;">${idx + 1}</td>
+            <td style="font-weight: 700; color: #0f172a;">${s.fullName}</td>
+            <td><code>${s.nationalId}</code></td>
+            <td><span class="badge ${s.schoolData?.classId ? 'badge-primary' : 'badge-secondary'}">${className}</span></td>
+            <td style="text-transform: capitalize;">${s.gender}</td>
+            <td class="guardian-info">${guardianList}</td>
+          </tr>
+        `;
+      }).join('');
+
+      const html = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <title>Official Students Directory</title>
+          <style>
+            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+            @page {
+              size: A4 portrait;
+              margin: 15mm;
+            }
+            body {
+              font-family: 'Inter', sans-serif;
+              color: #1e293b;
+              margin: 0;
+              padding: 0;
+              line-height: 1.4;
+              background: #ffffff;
+            }
+            .header-container {
+              display: flex;
+              align-items: center;
+              border-bottom: 3px solid ${themeColor};
+              padding-bottom: 16px;
+              margin-bottom: 24px;
+            }
+            .logo-wrapper {
+              margin-right: 20px;
+            }
+            .logo {
+              max-height: 70px;
+              max-width: 70px;
+              object-fit: contain;
+            }
+            .school-info {
+              flex-grow: 1;
+            }
+            .school-name {
+              font-size: 24px;
+              font-weight: 800;
+              color: #0f172a;
+              line-height: 1.2;
+              margin: 0 0 4px 0;
+              text-transform: uppercase;
+              letter-spacing: -0.5px;
+            }
+            .school-motto {
+              font-size: 12px;
+              font-style: italic;
+              color: #475569;
+              margin: 0 0 8px 0;
+            }
+            .school-metadata {
+              font-size: 11px;
+              color: #64748b;
+              display: flex;
+              flex-wrap: wrap;
+              gap: 12px;
+            }
+            .report-title-container {
+              margin-bottom: 20px;
+              display: flex;
+              justify-content: space-between;
+              align-items: flex-end;
+              border-bottom: 1px solid #e2e8f0;
+              padding-bottom: 8px;
+            }
+            .report-title {
+              font-size: 18px;
+              font-weight: 700;
+              color: #1e293b;
+              margin: 0;
+              letter-spacing: -0.3px;
+            }
+            .report-date {
+              font-size: 11px;
+              color: #64748b;
+            }
+            .stats-grid {
+              display: grid;
+              grid-template-columns: repeat(3, 1fr);
+              gap: 12px;
+              margin-bottom: 24px;
+            }
+            .stats-card {
+              background: #f8fafc;
+              border: 1px solid #e2e8f0;
+              padding: 10px;
+              border-radius: 8px;
+              text-align: center;
+            }
+            .stats-val {
+              font-size: 18px;
+              font-weight: 700;
+              color: ${themeColor};
+            }
+            .stats-lbl {
+              font-size: 9px;
+              font-weight: 600;
+              text-transform: uppercase;
+              color: #64748b;
+              margin-top: 2px;
+            }
+            table {
+              width: 100%;
+              border-collapse: collapse;
+              margin-bottom: 30px;
+              font-size: 11px;
+            }
+            th {
+              background-color: #f1f5f9;
+              color: #475569;
+              font-weight: 700;
+              text-align: left;
+              padding: 8px 10px;
+              border-bottom: 2px solid #cbd5e1;
+              text-transform: uppercase;
+              font-size: 10px;
+              letter-spacing: 0.5px;
+            }
+            td {
+              padding: 8px 10px;
+              border-bottom: 1px solid #e2e8f0;
+              color: #334155;
+              vertical-align: top;
+            }
+            tr:nth-child(even) {
+              background-color: #f8fafc;
+            }
+            code {
+              font-family: monospace;
+              font-weight: 600;
+              color: #0f172a;
+              background-color: #f1f5f9;
+              padding: 2px 4px;
+              border-radius: 4px;
+            }
+            .guardian-info {
+              font-size: 11px;
+              color: #475569;
+            }
+            .badge {
+              display: inline-block;
+              padding: 2px 6px;
+              font-size: 9px;
+              font-weight: 700;
+              border-radius: 4px;
+              text-transform: uppercase;
+            }
+            .badge-primary {
+              background-color: #e0f2fe;
+              color: #0369a1;
+              border: 1px solid #bae6fd;
+            }
+            .badge-secondary {
+              background-color: #f1f5f9;
+              color: #475569;
+              border: 1px solid #e2e8f0;
+            }
+            .footer {
+              border-top: 1px solid #e2e8f0;
+              padding-top: 10px;
+              margin-top: 40px;
+              font-size: 9px;
+              color: #94a3b8;
+              text-align: center;
+              page-break-inside: avoid;
+            }
+            @media print {
+              body {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+              }
+              thead {
+                display: table-header-group;
+              }
+              tr {
+                break-inside: avoid;
+              }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="header-container">
+            ${logoHtml}
+            <div class="school-info">
+              <h1 class="school-name">${settings.schoolName || 'Comfort School Manager'}</h1>
+              ${settings.schoolMotto ? `<div class="school-motto">${settings.schoolMotto}</div>` : ''}
+              <div class="school-metadata">
+                ${settings.schoolContact ? `<span>📞 ${settings.schoolContact}</span>` : ''}
+                ${settings.schoolPhone ? `<span>📱 ${settings.schoolPhone}</span>` : ''}
+                ${settings.schoolAddress ? `<span>📍 ${settings.schoolAddress}</span>` : ''}
+              </div>
+            </div>
+          </div>
+
+          <div class="report-title-container">
+            <h2 class="report-title">Official Student Directory</h2>
+            <div class="report-date">Date: ${new Date().toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })}</div>
+          </div>
+
+          <div class="stats-grid">
+            <div class="stats-card">
+              <div class="stats-val">${allStudents.length}</div>
+              <div class="stats-lbl">Total Students</div>
+            </div>
+            <div class="stats-card">
+              <div class="stats-val">${allStudents.filter(s => s.gender === 'Male').length}</div>
+              <div class="stats-lbl">Male Students</div>
+            </div>
+            <div class="stats-card">
+              <div class="stats-val">${allStudents.filter(s => s.gender === 'Female').length}</div>
+              <div class="stats-lbl">Female Students</div>
+            </div>
+          </div>
+
+          <table>
+            <thead>
+              <tr>
+                <th style="width: 40px; text-align: center;">No.</th>
+                <th>Student Name</th>
+                <th>Student ID</th>
+                <th>Class</th>
+                <th>Gender</th>
+                <th>Primary Guardian & Contact</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${studentRows.length > 0 ? studentRows : `<tr><td colspan="6" style="text-align: center; padding: 24px 10px; color: #64748b;">No student records found in database.</td></tr>`}
+            </tbody>
+          </table>
+
+          <div class="footer">
+            ${settings.schoolName || 'Comfort School Manager'} &bull; Generated dynamically via Cloud Student Ledger system.
+          </div>
+        </body>
+        </html>
+      `;
+
+      downloadPDF(html, `${(settings.schoolName || 'School').replace(/\s+/g, '_')}_Student_Directory.pdf`);
+    } catch (error) {
+      console.error("Print generation crashed:", error);
+      alert("Failed to compile the student directory table. Ensure records are correct.");
+    }
+  };
+
   return (
     <div className="flex flex-col h-full space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 print:hidden">
@@ -66,8 +343,8 @@ export default function Students() {
         {activeTab === 'directory' && (
           <div className="flex items-center gap-2">
             <button 
-              onClick={() => window.print()}
-              className="bg-white dark:bg-slate-800 border border-gray-300 dark:border-cyan-900/40 text-gray-750 dark:text-gray-300 px-4 py-2 rounded-lg font-medium flex items-center gap-2 hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors cursor-pointer shadow-sm"
+              onClick={handlePrintStudentList}
+              className="bg-white dark:bg-slate-800 border border-gray-300 dark:border-cyan-900/40 text-gray-750 dark:text-gray-300 px-4 py-2 rounded-lg font-medium flex items-center gap-2 hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors cursor-pointer shadow-sm animate-none"
             >
               <Download className="w-4 h-4" />
               Print List

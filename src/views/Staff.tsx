@@ -146,109 +146,111 @@ function StaffFormModal({ staff, onClose }: StaffFormModalProps) {
 
   return (
     <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-      <div className="bg-white dark:bg-slate-900 border dark:border-cyan-900/30 rounded-xl shadow-xl w-full max-w-lg p-6">
-        <div className="flex justify-between items-center mb-4 pb-2 border-b dark:border-cyan-900/10">
-          <h3 className="font-bold text-lg text-gray-900">
+      <div className="bg-white dark:bg-slate-900 border dark:border-cyan-900/30 rounded-xl shadow-xl w-full max-w-lg flex flex-col max-h-[85vh] overflow-hidden">
+        <div className="flex justify-between items-center px-6 py-4.5 border-b dark:border-cyan-900/10 bg-gray-50/50 dark:bg-slate-950/20">
+          <h3 className="font-bold text-lg text-gray-900 dark:text-white">
             {staff ? 'Edit Staff Member' : 'Add Staff Member'}
           </h3>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 dark:hover:text-cyan-400">
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-650 dark:hover:text-cyan-400 cursor-pointer p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-800">
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        <form onSubmit={handleSave} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
-            <input 
-              required 
-              type="text" 
-              value={fullName} 
-              onChange={e => setFullName(e.target.value)} 
-              className="input-field" 
-              placeholder="e.g. John Doe"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Title / Designation</label>
-            <select 
-              value={title} 
-              onChange={e => setTitle(e.target.value)} 
-              className="input-field"
-            >
-              <option value="Teacher">Teacher</option>
-              <option value="Lecturer">Lecturer</option>
-              <option value="Principal">Principal</option>
-              <option value="Dean">Dean</option>
-              <option value="Administrator">Administrator</option>
-              <option value="Librarian">Librarian</option>
-              <option value="Support Staff">Support Staff</option>
-              <option value="Other">Other</option>
-            </select>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <form onSubmit={handleSave} className="flex-1 flex flex-col min-h-0">
+          <div className="p-6 space-y-4 overflow-y-auto flex-1 min-h-0 text-left">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Contact Number</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-cyan-100/70 mb-1">Full Name</label>
               <input 
+                required 
                 type="text" 
-                value={contact} 
-                onChange={e => setContact(e.target.value)} 
+                value={fullName} 
+                onChange={e => setFullName(e.target.value)} 
                 className="input-field" 
-                placeholder="e.g. +123456789"
+                placeholder="e.g. John Doe"
               />
             </div>
+
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
-              <input 
-                type="email" 
-                value={email} 
-                onChange={e => setEmail(e.target.value)} 
-                className="input-field" 
-                placeholder="e.g. john@school.edu"
-              />
+              <label className="block text-sm font-medium text-gray-700 dark:text-cyan-100/70 mb-1">Title / Designation</label>
+              <select 
+                value={title} 
+                onChange={e => setTitle(e.target.value)} 
+                className="input-field"
+              >
+                <option value="Teacher">Teacher</option>
+                <option value="Lecturer">Lecturer</option>
+                <option value="Principal">Principal</option>
+                <option value="Dean">Dean</option>
+                <option value="Administrator">Administrator</option>
+                <option value="Librarian">Librarian</option>
+                <option value="Support Staff">Support Staff</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-cyan-100/70 mb-1">Contact Number</label>
+                <input 
+                  type="text" 
+                  value={contact} 
+                  onChange={e => setContact(e.target.value)} 
+                  className="input-field" 
+                  placeholder="e.g. +123456789"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-cyan-100/70 mb-1">Email Address</label>
+                <input 
+                  type="email" 
+                  value={email} 
+                  onChange={e => setEmail(e.target.value)} 
+                  className="input-field" 
+                  placeholder="e.g. john@school.edu"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-cyan-100/70 mb-1">Status</label>
+              <div className="flex gap-4">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input 
+                    type="radio" 
+                    name="status" 
+                    value="Active" 
+                    checked={status === 'Active'} 
+                    onChange={() => setStatus('Active')} 
+                    className="text-primary focus:ring-cyan-500 h-4 w-4"
+                  />
+                  <span className="text-sm font-medium text-gray-750 dark:text-gray-300">Active</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input 
+                    type="radio" 
+                    name="status" 
+                    value="Inactive" 
+                    checked={status === 'Inactive'} 
+                    onChange={() => setStatus('Inactive')} 
+                    className="text-primary focus:ring-cyan-500 h-4 w-4"
+                  />
+                  <span className="text-sm font-medium text-gray-750 dark:text-gray-300">Inactive</span>
+                </label>
+              </div>
             </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
-            <div className="flex gap-4">
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input 
-                  type="radio" 
-                  name="status" 
-                  value="Active" 
-                  checked={status === 'Active'} 
-                  onChange={() => setStatus('Active')} 
-                  className="text-primary focus:ring-cyan-500 h-4 w-4"
-                />
-                <span className="text-sm font-medium text-gray-700">Active</span>
-              </label>
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input 
-                  type="radio" 
-                  name="status" 
-                  value="Inactive" 
-                  checked={status === 'Inactive'} 
-                  onChange={() => setStatus('Inactive')} 
-                  className="text-primary focus:ring-cyan-500 h-4 w-4"
-                />
-                <span className="text-sm font-medium text-gray-700">Inactive</span>
-              </label>
-            </div>
-          </div>
-
-          <div className="flex justify-end gap-3 pt-4 border-t dark:border-cyan-900/10">
+          <div className="flex justify-end gap-3 p-5 border-t dark:border-cyan-900/10 bg-gray-50/50 dark:bg-slate-950/10 shrink-0">
             <button 
               type="button" 
               onClick={onClose} 
-              className="px-4 py-2 border border-gray-300 dark:border-cyan-900/50 rounded-lg text-gray-700 hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors"
+              className="px-4 py-2 border border-gray-300 dark:border-cyan-900/50 rounded-lg text-gray-750 dark:text-cyan-155/70 hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
             >
               Cancel
             </button>
             <button 
               type="submit" 
-              className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
+              className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/95 transition-colors cursor-pointer"
             >
               Save Member
             </button>
