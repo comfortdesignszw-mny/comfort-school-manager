@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../db';
-import { Search, Plus, X, Upload, Trash2, Edit2, Share2, Download, Users, CheckSquare, CreditCard, UserX } from 'lucide-react';
+import { Search, Plus, X, Upload, Trash2, Edit2, Share2, Download, Users, CheckSquare, CreditCard, UserX, Image as ImageIcon } from 'lucide-react';
 import type { Student, Guardian } from '../types';
 import { getSettings } from '../db';
-import { downloadPDF } from '../utils/pdf';
+import { downloadPDF, downloadElementAsPDF, downloadElementAsImage } from '../utils/pdf';
 import Tooltip from '../components/Tooltip';
 import AttendanceTracker from './AttendanceTracker';
+import StudentIDCard from '../components/StudentIDCard';
 
 export default function Students() {
   const [activeTab, setActiveTab] = useState<'directory' | 'attendance'>('directory');
@@ -14,6 +15,8 @@ export default function Students() {
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const [isAdding, setIsAdding] = useState(false);
   const [editingStudent, setEditingStudent] = useState<Student | null>(null);
+  const [selectedStudentIds, setSelectedStudentIds] = useState<Set<number>>(new Set());
+  const [previewStudentId, setPreviewStudentId] = useState<number | null>(null);
 
   // Example subset fetch - usually you'd filter in query but dexie makes full text search a bit manual
   const students = useLiveQuery(
@@ -28,6 +31,29 @@ export default function Students() {
     },
     [searchQuery]
   );
+
+  const toggleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.checked) {
+      setSelectedStudentIds(new Set(students?.map(s => s.id!).filter(Boolean) || []));
+    } else {
+      setSelectedStudentIds(new Set());
+    }
+  };
+
+  const toggleSelectStudent = (e: React.MouseEvent | React.ChangeEvent<HTMLInputElement>, id: number) => {
+    e.stopPropagation();
+    const newSet = new Set(selectedStudentIds);
+    if (newSet.has(id)) newSet.delete(id);
+    else newSet.add(id);
+    setSelectedStudentIds(newSet);
+  };
+
+  const handleBulkPrint = () => {
+    const el = document.getElementById('bulk-print-container');
+    if (el) {
+      downloadElementAsPDF(el, `Bulk_Student_ID_Cards.pdf`, false);
+    }
+  };
 
   return (
     <div className="flex flex-col h-full space-y-6">
@@ -85,8 +111,8 @@ export default function Students() {
       {activeTab === 'directory' ? (
         <>
           <div className="table-container print:border-none print:shadow-none">
-            <div className="p-4 border-b border-gray-250 dark:border-cyan-900/20 flex items-center gap-3 print:hidden">
-              <div className="relative flex-1 max-w-md">
+            <div className="p-4 border-b border-gray-250 dark:border-cyan-900/20 flex flex-col sm:flex-row items-center justify-between gap-3 print:hidden">
+              <div className="relative flex-1 max-w-md w-full">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-cyan-500/50 w-5 h-5" />
                 <input 
                   type="text" 
@@ -96,22 +122,38 @@ export default function Students() {
                   className="w-full pl-10 pr-4 py-2 bg-gray-50 dark:bg-slate-950/45 border border-gray-150 dark:border-cyan-900/30 rounded-lg text-gray-950 dark:text-white placeholder-gray-400 dark:placeholder-gray-550 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary"
                 />
               </div>
+              {selectedStudentIds.size > 0 && (
+                <button
+                  onClick={handleBulkPrint}
+                  className="bg-primary text-white px-4 py-2 rounded-lg font-bold text-sm shadow-md hover:bg-primary/90 flex items-center gap-2"
+                >
+                  <CreditCard className="w-4 h-4" /> Print {selectedStudentIds.size} IDs
+                </button>
+              )}
             </div>
             
             <div className="flex-1 overflow-auto">
               <table className="w-full text-left border-collapse">
                 <thead className="table-header sticky top-0">
                   <tr>
+                    <th className="py-3 px-4 w-12 text-center">
+                      <input 
+                        type="checkbox" 
+                        className="rounded border-gray-300 text-primary focus:ring-primary"
+                        checked={students?.length ? selectedStudentIds.size === students.length : false}
+                        onChange={toggleSelectAll}
+                      />
+                    </th>
                     <th className="py-3 px-4 font-semibold">Name</th>
                     <th className="py-3 px-4 font-semibold">Student ID</th>
                     <th className="py-3 px-4 font-semibold">Gender</th>
-                    <th className="py-3 px-4 font-semibold">DOB</th>
+                    <th className="py-3 px-4 font-semibold text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100 dark:divide-cyan-900/10 text-sm">
                   {students?.length === 0 ? (
                     <tr>
-                      <td colSpan={4} className="py-16 text-center">
+                      <td colSpan={5} className="py-16 text-center">
                         <UserX className="w-16 h-16 mx-auto text-gray-300 dark:text-gray-600 mb-4" strokeWidth={1} />
                         <h3 className="text-gray-900 dark:text-gray-200 font-bold text-lg mb-1">No students registered</h3>
                         <p className="text-gray-500 dark:text-gray-400 text-sm max-w-sm mx-auto mb-4">You haven't added any students yet. Register your first student or use the CSV bulk importer in the Settings view.</p>
@@ -130,10 +172,29 @@ export default function Students() {
                         onClick={() => setSelectedStudent(student)}
                         className="table-row cursor-pointer transition-colors"
                       >
+                        <td className="py-3 px-4 text-center" onClick={e => e.stopPropagation()}>
+                          <input 
+                            type="checkbox" 
+                            className="rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
+                            checked={student.id ? selectedStudentIds.has(student.id) : false}
+                            onChange={(e) => { e.stopPropagation(); toggleSelectStudent(e as any, student.id!); }}
+                          />
+                        </td>
                         <td className="py-3 px-4 font-bold text-gray-950 dark:text-white">{student.fullName}</td>
                         <td className="py-3 px-4 text-gray-600 dark:text-cyan-100/70">{student.nationalId}</td>
                         <td className="py-3 px-4 text-gray-600 dark:text-cyan-100/70">{student.gender}</td>
-                        <td className="py-3 px-4 text-gray-600 dark:text-cyan-100/70">{student.dob}</td>
+                        <td className="py-3 px-4 text-right">
+                          <button 
+                            className="p-1.5 text-gray-400 hover:text-primary dark:text-cyan-500 rounded bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-700 transition-colors inline-flex"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setPreviewStudentId(student.id!);
+                            }}
+                            title="Preview ID Card"
+                          >
+                            <CreditCard className="w-4 h-4" />
+                          </button>
+                        </td>
                       </tr>
                     ))
                   )}
@@ -146,11 +207,89 @@ export default function Students() {
             <StudentModal onClose={() => setIsAdding(false)} />
           )}
 
+          {/* Off-screen Bulk Print Container */}
+          <div style={{ position: 'absolute', top: '-9999px', left: '-9999px', pointerEvents: 'none' }}>
+            <div id="bulk-print-container" className="flex flex-wrap items-start justify-start gap-4 p-4" style={{ width: '1024px', background: 'white' }}>
+              {students?.filter(s => selectedStudentIds.has(s.id!)).map(student => (
+                <div key={student.id} style={{ breakInside: 'avoid', pageBreakInside: 'avoid' }}>
+                  <StudentIDCard id={`bulk-id-card-${student.id}`} student={student} />
+                </div>
+              ))}
+            </div>
+          </div>
+
           {editingStudent && (
             <StudentModal 
               initialData={editingStudent} 
               onClose={() => { setEditingStudent(null); setSelectedStudent(null); }} 
             />
+          )}
+
+          {previewStudentId && students && (
+            <div className="fixed inset-0 bg-black/70 z-[60] flex items-center justify-center p-4 backdrop-blur-sm" onClick={() => setPreviewStudentId(null)}>
+              <div 
+                className="bg-white dark:bg-slate-900 border border-gray-200 dark:border-cyan-900/30 rounded-2xl shadow-2xl overflow-hidden flex flex-col md:flex-row relative"
+                onClick={e => e.stopPropagation()}
+              >
+                <div className="p-8 flex items-center justify-center bg-gray-50/50 dark:bg-slate-950/20 border-r border-gray-200 dark:border-cyan-900/30" id="preview-id-wrapper">
+                  <StudentIDCard id="preview-student-id-card" student={students.find(s => s.id === previewStudentId)!} style={{ boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)' }} />
+                </div>
+                <div className="p-8 flex flex-col justify-center min-w-[200px] gap-4">
+                  <h3 className="font-black text-xl text-gray-900 dark:text-white mb-2">ID Card Preview</h3>
+                  
+                  <button 
+                    onClick={() => {
+                      const el = document.getElementById('preview-student-id-card');
+                      if (el) downloadElementAsPDF(el, `${students.find(s => s.id === previewStudentId)!.fullName}_ID.pdf`, true);
+                    }}
+                    className="flex items-center gap-2 px-4 py-3 bg-primary text-white rounded-xl font-bold shadow hover:bg-primary/90 transition-colors"
+                  >
+                    <Download className="w-5 h-5" /> Download PDF
+                  </button>
+                  
+                  <button 
+                    onClick={() => {
+                      const el = document.getElementById('preview-student-id-card');
+                      if (el) downloadElementAsImage(el, `${students.find(s => s.id === previewStudentId)!.fullName}_ID.jpg`);
+                    }}
+                    className="flex items-center gap-2 px-4 py-3 bg-cyan-600 text-white rounded-xl font-bold shadow hover:bg-cyan-700 transition-colors"
+                  >
+                    <Download className="w-5 h-5" /> Download JPEG
+                  </button>
+
+                  <button 
+                    onClick={() => {
+                      const el = document.getElementById('preview-student-id-card');
+                      if (el) {
+                        const win = window.open('', '_blank');
+                        if (win) {
+                          win.document.write('<html><head><title>Print ID Card</title>');
+                          win.document.write('<style>@media print { body { margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; } } body { display: flex; justify-content: center; padding: 20px; background: #f0f0f0; }</style>');
+                          win.document.write('</head><body>');
+                          win.document.write(el.outerHTML);
+                          win.document.write('<script>setTimeout(function() { window.print(); window.close(); }, 500);</script>');
+                          win.document.write('</body></html>');
+                          win.document.close();
+                        }
+                      }
+                    }}
+                    className="flex items-center gap-2 px-4 py-3 bg-slate-800 text-white rounded-xl font-bold shadow hover:bg-slate-900 transition-colors"
+                  >
+                    <CreditCard className="w-5 h-5" /> Print ID
+                  </button>
+
+                  <button 
+                    onClick={() => setPreviewStudentId(null)}
+                    className="flex items-center justify-center gap-2 px-4 py-3 bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-cyan-100 rounded-xl font-bold hover:bg-gray-200 dark:hover:bg-slate-700 transition-colors mt-auto"
+                  >
+                    Close Preview
+                  </button>
+                </div>
+                <button onClick={() => setPreviewStudentId(null)} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 dark:hover:text-cyan-400 w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 dark:bg-slate-800">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
           )}
 
           {selectedStudent && !editingStudent && (
@@ -543,242 +682,26 @@ function StudentDetailsModal({ student, onClose, onEdit }: { student: Student, o
   };
 
   const generateIDCard = () => {
-    const html = `
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <title>${student.fullName} - ID Card</title>
-          <style>
-            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
-            
-            body { 
-              font-family: 'Inter', system-ui, -apple-system, sans-serif; 
-              padding: 20px; 
-              display: flex; 
-              justify-content: center; 
-              align-items: center;
-              background: #f0f4f8;
-              margin: 0;
-            }
-            .id-card { 
-              width: 320px; 
-              height: 480px; 
-              background: white;
-              border-radius: 16px; 
-              position: relative; 
-              overflow: hidden; 
-              box-shadow: 0 10px 25px rgba(0,0,0,0.1), 0 4px 10px rgba(0,0,0,0.05); 
-              display: flex; 
-              flex-direction: column;
-              align-items: center;
-              text-align: center;
-              box-sizing: border-box;
-            }
-            .background-pattern {
-              position: absolute;
-              top: 0;
-              left: 0;
-              width: 100%;
-              height: 135px;
-              background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-              z-index: 1;
-            }
-            .background-pattern::after {
-              content: '';
-              position: absolute;
-              bottom: 0;
-              left: 0;
-              right: 0;
-              height: 6px;
-              background: linear-gradient(90deg, #0ea5e9, #38bdf8);
-            }
-            .content-wrapper { 
-              z-index: 2; 
-              display: flex; 
-              flex-direction: column; 
-              align-items: center; 
-              padding: 20px 24px; 
-              height: 100%; 
-              width: 100%;
-              box-sizing: border-box;
-            }
-            .school-header {
-              display: flex;
-              flex-direction: column;
-              align-items: center;
-              width: 100%;
-              margin-bottom: 20px;
-            }
-            .school-logo { 
-              width: 44px; 
-              height: 44px; 
-              object-fit: contain; 
-              background: white; 
-              border-radius: 10px; 
-              padding: 4px; 
-              box-shadow: 0 4px 6px rgba(0,0,0,0.1); 
-              margin-bottom: 6px; 
-            }
-            .school-name { 
-              font-size: 14px; 
-              font-weight: 800; 
-              color: white; 
-              text-transform: uppercase;
-              letter-spacing: 0.5px;
-              line-height: 1.2;
-              width: 100%;
-              display: -webkit-box;
-              -webkit-line-clamp: 2;
-              -webkit-box-orient: vertical;
-              overflow: hidden;
-            }
-            
-            .photo-container {
-              position: relative;
-              margin-bottom: 12px;
-              margin-top: -5px;
-            }
-            .photo { 
-              width: 100px; 
-              height: 100px; 
-              border-radius: 50%; 
-              object-fit: cover; 
-              border: 4px solid white; 
-              box-shadow: 0 6px 12px rgba(0,0,0,0.15); 
-              background: #f8fafc; 
-            }
-            
-            .student-info {
-              display: flex;
-              flex-direction: column;
-              align-items: center;
-              width: 100%;
-              margin-bottom: auto;
-            }
-            .name { 
-              font-size: 20px; 
-              font-weight: 800; 
-              color: #0f172a; 
-              line-height: 1.2; 
-              margin-bottom: 4px;
-              width: 100%;
-              display: -webkit-box;
-              -webkit-line-clamp: 2;
-              -webkit-box-orient: vertical;
-              overflow: hidden;
-            }
-            .role { 
-              font-size: 11px; 
-              color: #0ea5e9; 
-              font-weight: 800; 
-              text-transform: uppercase; 
-              letter-spacing: 1.5px;
-            }
-            
-            .info-grid { 
-              display: grid;
-              grid-template-columns: 1fr 1fr;
-              gap: 8px;
-              width: 100%; 
-              background: #f8fafc;
-              border-radius: 10px;
-              padding: 10px;
-              margin-bottom: 16px;
-              border: 1px solid #e2e8f0;
-            }
-            .info-block { display: flex; flex-direction: column; align-items: center; max-width: 100%; }
-            .info-label { font-size: 9px; color: #64748b; text-transform: uppercase; margin-bottom: 2px; font-weight: 700; letter-spacing: 0.5px;}
-            .info-value { font-size: 12px; color: #0f172a; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; width: 100%;}
-            
-            .footer-section {
-              display: flex;
-              flex-direction: column;
-              align-items: center;
-              width: 100%;
-            }
-            .qr-code { 
-              width: 90px; 
-              height: 90px; 
-              margin-bottom: 6px;
-              border-radius: 8px;
-              padding: 4px;
-              background: white;
-              border: 1px solid #e2e8f0;
-            }
-            .id-number {
-              font-size: 11px;
-              color: #64748b;
-              font-variant-numeric: tabular-nums;
-              font-weight: 600;
-              letter-spacing: 1px;
-            }
-            .footer-strip {
-              position: absolute; 
-              bottom: 0; left: 0; width: 100%; height: 8px; 
-              background: linear-gradient(90deg, #0ea5e9, #38bdf8);
-            }
-            @media print {
-              body { background: white; padding: 0; }
-              .id-card { box-shadow: none; border: 1px solid #e2e8f0; }
-              .background-pattern { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-              .footer-strip { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-              .content-wrapper { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-              .qr-code, .photo, .info-grid { border-width: 1px; border-style: solid; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-              .photo { border-color: white; }
-            }
-          </style>
-        </head>
-        <body>
-          <div class="id-card">
-            <div class="background-pattern"></div>
-            <div class="content-wrapper">
-              <div class="school-header">
-                ${settings.schoolLogo ? `<img src="${settings.schoolLogo}" class="school-logo" />` : ''}
-                <div class="school-name">${settings.schoolName || 'School Name'}</div>
-              </div>
-              
-              <div class="photo-container">
-                  ${student.profilePhoto 
-                    ? `<img src="${student.profilePhoto}" class="photo" />` 
-                    : `<div class="photo" style="display:flex;align-items:center;justify-content:center;font-size:36px;color:#94a3b8;font-weight:800;">${student.fullName.charAt(0)}</div>`
-                  }
-              </div>
-              
-              <div class="student-info">
-                <div class="name">${student.fullName}</div>
-                <div class="role">Student</div>
-              </div>
+    const el = document.getElementById(`student-id-card-${student.id || 'new'}`);
+    if (el) {
+      downloadElementAsPDF(el, `${student.fullName.replace(/\s+/g, '_')}_IDCard.pdf`, true);
+    }
+  };
 
-              <div class="info-grid">
-                <div class="info-block">
-                  <span class="info-label">Class</span>
-                  <span class="info-value">${assignedClass?.name || 'Unassigned'}</span>
-                </div>
-                <div class="info-block">
-                  <span class="info-label">Date of Birth</span>
-                  <span class="info-value">${student.dob || '-'}</span>
-                </div>
-              </div>
-
-              <div class="footer-section">
-                ${student.nationalId 
-                  ? `<img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&margin=0&data=${encodeURIComponent(student.nationalId || student.id?.toString() || 'student')}" class="qr-code" crossorigin="anonymous" />`
-                  : `<div style="width:90px;height:90px;background:#f1f5f9;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:10px;color:#94a3b8;margin-bottom:6px;">No ID</div>`
-                }
-                <div class="id-number">${student.nationalId || student.id || 'N/A'}</div>
-              </div>
-            </div>
-            <div class="footer-strip"></div>
-          </div>
-        </body>
-      </html>
-    `;
-
-    downloadPDF(html, `${student.fullName.replace(/\s+/g, '_')}_IDCard.pdf`);
+  const generateIDCardImage = () => {
+    const el = document.getElementById(`student-id-card-${student.id || 'new'}`);
+    if (el) {
+      downloadElementAsImage(el, `${student.fullName.replace(/\s+/g, '_')}_IDCard.jpg`);
+    }
   };
 
   return (
     <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={onClose}>
+      {/* Hidden ID Card for PDF Generation */}
+      <div style={{ position: 'absolute', top: '-9999px', left: '-9999px', pointerEvents: 'none' }}>
+        <StudentIDCard id={`student-id-card-${student.id || 'new'}`} student={{ ...student, schoolData: { ...student.schoolData, assignedClass: assignedClass?.name } }} />
+      </div>
+
       <div className="bg-white dark:bg-slate-900 border dark:border-cyan-900/30 rounded-xl shadow-xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]" onClick={e => e.stopPropagation()}>
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-6 border-b border-gray-200 dark:border-cyan-900/30 bg-gray-50/50 dark:bg-slate-950/20 relative gap-4">
           <div className="flex gap-4 items-center pr-8 sm:pr-0 width-full">
@@ -810,9 +733,14 @@ function StudentDetailsModal({ student, onClose, onEdit }: { student: Student, o
                 <Share2 className="w-5 h-5 sm:w-4 sm:h-4"/>
               </button>
             </Tooltip>
-            <Tooltip content="Download Printable ID Card Card">
-              <button onClick={generateIDCard} className="p-2.5 sm:p-2 text-gray-700 dark:text-cyan-200 hover:text-primary dark:hover:text-cyan-400 bg-white sm:bg-gray-100 dark:bg-slate-800 border sm:border-none border-gray-200 dark:border-cyan-900/40 rounded-xl sm:rounded-full transition-all shadow-sm sm:shadow-none min-w-[44px] flex justify-center cursor-pointer" title="Download ID Card">
+            <Tooltip content="Download Printable ID Card (PDF)">
+              <button onClick={generateIDCard} className="p-2.5 sm:p-2 text-gray-700 dark:text-cyan-200 hover:text-primary dark:hover:text-cyan-400 bg-white sm:bg-gray-100 dark:bg-slate-800 border sm:border-none border-gray-200 dark:border-cyan-900/40 rounded-xl sm:rounded-full transition-all shadow-sm sm:shadow-none min-w-[44px] flex justify-center cursor-pointer" title="Download ID Card (PDF)">
                 <CreditCard className="w-5 h-5 sm:w-4 sm:h-4"/>
+              </button>
+            </Tooltip>
+            <Tooltip content="Download Printable ID Card (JPEG)">
+              <button onClick={generateIDCardImage} className="p-2.5 sm:p-2 text-gray-700 dark:text-cyan-200 hover:text-primary dark:hover:text-cyan-400 bg-white sm:bg-gray-100 dark:bg-slate-800 border sm:border-none border-gray-200 dark:border-cyan-900/40 rounded-xl sm:rounded-full transition-all shadow-sm sm:shadow-none min-w-[44px] flex justify-center cursor-pointer" title="Download ID Card (JPEG)">
+                <ImageIcon className="w-5 h-5 sm:w-4 sm:h-4"/>
               </button>
             </Tooltip>
             <Tooltip content="Export full profile as PDF report">
