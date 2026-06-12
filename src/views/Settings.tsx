@@ -202,12 +202,30 @@ export default function Settings() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Contact Email/Phone</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Contact Email</label>
             <input 
               type="text" 
               value={settings.schoolContact}
               onChange={e => handleChange('schoolContact', e.target.value)}
               className="input-field" 
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Contact Phone Number</label>
+            <input 
+              type="text" 
+              value={settings.schoolPhone || ''}
+              onChange={e => handleChange('schoolPhone', e.target.value)}
+              className="input-field" 
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Physical Address</label>
+            <textarea 
+              value={settings.schoolAddress || ''}
+              onChange={e => handleChange('schoolAddress', e.target.value)}
+              className="input-field"
+              rows={2}
             />
           </div>
           <div>

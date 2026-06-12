@@ -45,6 +45,7 @@ export const defaultSettings = {
   schoolLogo: '/icon.png',
   schoolMotto: 'Excellence in Education',
   schoolContact: 'contact@school.edu',
+  schoolPhone: '+1 234 567 890',
   schoolAddress: '123 Education Lane',
   systemMode: 'Primary',
   themeColor: '#0056b3',

@@ -53,6 +53,8 @@ export default function Noticeboard() {
             <div class="school-info">
               <h1>${settings.schoolName || 'School Manager'}</h1>
               <p>${settings.schoolMotto || 'Excellence in Education'}</p>
+              <p>${[settings.schoolPhone, settings.schoolContact].filter(Boolean).join(' | ')}</p>
+              ${settings.schoolAddress ? `<p>${settings.schoolAddress}</p>` : ''}
             </div>
           </div>
           <h2 style="font-size: 24px; color: #0F172A; font-weight: 800; margin-bottom: 10px;">${notice.title}</h2>

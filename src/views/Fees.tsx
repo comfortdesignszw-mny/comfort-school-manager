@@ -161,7 +161,10 @@ export default function Fees() {
             ${settings.schoolLogo ? `<img src="${settings.schoolLogo}" class="logo" />` : ''}
             <div class="school-info">
               <h1>${settings.schoolName || 'School Manager'}</h1>
-              <p>Financial Export (Selected Selection) - ${new Date().toLocaleDateString()}</p>
+              ${settings.schoolMotto ? `<p style="font-style: italic">${settings.schoolMotto}</p>` : ''}
+              <p>${[settings.schoolPhone, settings.schoolContact].filter(Boolean).join(' | ')}</p>
+              ${settings.schoolAddress ? `<p>${settings.schoolAddress}</p>` : ''}
+              <p style="margin-top: 10px; font-weight: bold; color: ${settings.themeColor}">Financial Export (Selected Selection) - ${new Date().toLocaleDateString()}</p>
             </div>
           </div>
 
@@ -280,7 +283,10 @@ export default function Fees() {
             ${settings.schoolLogo ? `<img src="${settings.schoolLogo}" class="logo" />` : ''}
             <div class="school-info">
               <h1>${settings.schoolName || 'School Manager'}</h1>
-              <p>Financial Export - ${new Date().toLocaleDateString()}</p>
+              ${settings.schoolMotto ? `<p style="font-style: italic">${settings.schoolMotto}</p>` : ''}
+              <p>${[settings.schoolPhone, settings.schoolContact].filter(Boolean).join(' | ')}</p>
+              ${settings.schoolAddress ? `<p>${settings.schoolAddress}</p>` : ''}
+              <p style="margin-top: 10px; font-weight: bold; color: ${settings.themeColor}">Financial Export - ${new Date().toLocaleDateString()}</p>
             </div>
           </div>
 

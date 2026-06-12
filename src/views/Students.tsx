@@ -10,6 +10,7 @@ import AttendanceTracker from './AttendanceTracker';
 import StudentIDCard from '../components/StudentIDCard';
 
 export default function Students() {
+  const settings = getSettings();
   const [activeTab, setActiveTab] = useState<'directory' | 'attendance'>('directory');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
@@ -110,6 +111,22 @@ export default function Students() {
 
       {activeTab === 'directory' ? (
         <>
+          {/* Print-only Header */}
+          <div className="hidden print:flex flex-col items-center mb-6 border-b pb-4 mt-2">
+            {settings.schoolLogo && (
+              <img src={settings.schoolLogo} alt="School Logo" className="h-16 object-contain mb-2" />
+            )}
+            <h1 className="text-2xl font-black">{settings.schoolName}</h1>
+            {settings.schoolMotto && <p className="italic text-gray-600 text-sm mt-1">{settings.schoolMotto}</p>}
+            {(settings.schoolPhone || settings.schoolContact) && (
+              <p className="text-sm text-gray-500 mt-2">
+                {[settings.schoolPhone, settings.schoolContact].filter(Boolean).join(' | ')}
+              </p>
+            )}
+            {settings.schoolAddress && <p className="text-sm text-gray-500">{settings.schoolAddress}</p>}
+            <h2 className="text-xl font-bold mt-6">Students Directory</h2>
+          </div>
+
           <div className="table-container print:border-none print:shadow-none">
             <div className="p-4 border-b border-gray-250 dark:border-cyan-900/20 flex flex-col sm:flex-row items-center justify-between gap-3 print:hidden">
               <div className="relative flex-1 max-w-md w-full">
@@ -620,8 +637,9 @@ function StudentDetailsModal({ student, onClose, onEdit }: { student: Student, o
             ${settings.schoolLogo ? `<img src="${settings.schoolLogo}" class="logo" />` : ''}
             <div class="school-info">
               <h1>${settings.schoolName}</h1>
-              <p>${settings.schoolMotto}</p>
-              <p>${settings.schoolContact} | ${settings.schoolAddress}</p>
+              ${settings.schoolMotto ? `<p style="font-style: italic">${settings.schoolMotto}</p>` : ''}
+              <p>${[settings.schoolPhone, settings.schoolContact].filter(Boolean).join(' | ')}</p>
+              ${settings.schoolAddress ? `<p>${settings.schoolAddress}</p>` : ''}
             </div>
           </div>
 
