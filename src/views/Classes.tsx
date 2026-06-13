@@ -34,6 +34,31 @@ export default function Classes() {
   const students = useLiveQuery(() => db.students.toArray(), []) || [];
   const classStudents = students.filter(s => s.schoolData?.classId === activeClassId);
 
+  const getSubjectStudentStats = (clsObj: Class) => {
+    const clsSts = students.filter(s => s.schoolData?.classId === clsObj.id);
+    const stats: { [subject: string]: number } = {};
+    
+    clsSts.forEach(student => {
+      let subjs: string[] = [];
+      if (settings.systemMode === 'Primary') {
+        subjs = ['Mathematics', 'English', 'Science', 'Social Studies', 'Arts'];
+      } else if (settings.systemMode === 'Secondary') {
+        subjs = student.schoolData?.assignedSubjects || [];
+      } else { // Tertiary
+        subjs = student.schoolData?.assignedSubjects || [];
+        if (subjs.length === 0 && clsObj.courses) {
+          subjs = clsObj.courses.map(c => c.code);
+        }
+      }
+      
+      subjs.forEach(sub => {
+        stats[sub] = (stats[sub] || 0) + 1;
+      });
+    });
+    
+    return stats;
+  };
+
   const handleSeedDemoData = async () => {
     if (!activeClassId || !selectedClassObj) return;
     setIsSeeding(true);
@@ -110,6 +135,9 @@ export default function Classes() {
         ) : (
           classes.map(cls => {
             const isSelected = cls.id === activeClassId;
+            const clsStudentsCount = students.filter(s => s.schoolData?.classId === cls.id).length;
+            const subjectStats = getSubjectStudentStats(cls);
+
             return (
               <div 
                 key={cls.id} 
@@ -121,7 +149,7 @@ export default function Classes() {
                 }`}
               >
                 <div>
-                  <div className="flex justify-between items-start mb-4">
+                  <div className="flex justify-between items-start mb-2">
                     <div className="flex items-center gap-2">
                       <h3 className="font-bold text-xl text-gray-900 dark:text-white tracking-tight">{cls.name}</h3>
                       {isSelected && (
@@ -134,52 +162,75 @@ export default function Classes() {
                       ID: {cls.id}
                     </span>
                   </div>
+
+                  {/* Dynamic Class Enrolment & School Overall Metrics */}
+                  <div className="grid grid-cols-2 gap-2 mb-4">
+                    <div className="p-2 bg-primary/5 dark:bg-primary/10 rounded-lg border border-primary/10 text-center">
+                      <span className="block text-base font-extrabold text-primary dark:text-cyan-400 leading-tight border-b dark:border-cyan-950/20 pb-0.5 mb-0.5">
+                        {clsStudentsCount}
+                      </span>
+                      <span className="text-[9px] text-gray-500 dark:text-cyan-200/50 uppercase font-bold block mt-0.5">
+                        Students Enrolled
+                      </span>
+                    </div>
+                    <div className="p-2 bg-gray-50 dark:bg-slate-800/50 rounded-lg border border-gray-150/70 dark:border-cyan-900/10 text-center">
+                      <span className="block text-base font-extrabold text-gray-700 dark:text-gray-200 leading-tight border-b dark:border-cyan-950/20 pb-0.5 mb-0.5">
+                        {students.length}
+                      </span>
+                      <span className="text-[9px] text-gray-500 dark:text-cyan-200/50 uppercase font-bold block mt-0.5">
+                        Overall School Total
+                      </span>
+                    </div>
+                  </div>
                   
                   <div className="space-y-3 text-sm">
-                    {settings.systemMode === 'Primary' ? (
-                      <div className="bg-gray-50/50 p-3 rounded-lg border border-gray-100 dark:border-cyan-900/10">
-                        <span className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Class Teacher</span>
-                        <span className="font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
-                          <User className="w-4 h-4 text-primary" /> {cls.assignedTeacherName || 'Not Assigned'}
+                    {settings.systemMode === 'Primary' && (
+                      <div className="bg-gray-55/60 dark:bg-slate-900/20 p-2.5 rounded-lg border border-gray-150/50 dark:border-cyan-900/10">
+                        <span className="block text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-0.5">Class Teacher</span>
+                        <span className="font-bold text-gray-900 dark:text-gray-100 flex items-center gap-1.5 text-xs">
+                          <User className="w-3.5 h-3.5 text-primary" /> {cls.assignedTeacherName || 'Not Assigned'}
                         </span>
                       </div>
-                    ) : settings.systemMode === 'Secondary' ? (
-                      <div>
-                        <span className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Subject Teachers Assignments</span>
-                        {(!cls.subjectTeachers || cls.subjectTeachers.length === 0) ? (
-                          <span className="text-gray-400 italic block py-2 bg-gray-50 dark:bg-slate-900/10 px-3 rounded">No subjects assigned yet</span>
-                        ) : (
-                          <ul className="space-y-1.5">
-                            {cls.subjectTeachers.map((st, i) => (
-                              <li key={i} className="flex justify-between items-center bg-gray-50 dark:bg-slate-900/10 px-2.5 py-1.5 rounded-lg border border-gray-100 dark:border-cyan-900/10">
-                                <span className="text-gray-700 dark:text-gray-300 font-medium">{st.subject}</span>
-                                <span className="font-semibold text-xs text-primary bg-primary/5 px-2 py-0.5 rounded border border-primary/10">{st.teacherName}</span>
-                              </li>
-                            ))}
-                          </ul>
-                        )}
-                      </div>
-                    ) : (
-                      <div>
-                        <span className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Program Degree Courses</span>
-                        {(!cls.courses || cls.courses.length === 0) ? (
-                          <span className="text-gray-400 italic block py-2 bg-gray-50 dark:bg-slate-900/10 px-3 rounded">No courses assigned yet</span>
-                        ) : (
-                          <ul className="space-y-2">
-                            {cls.courses.map((c, i) => (
-                              <li key={i} className="flex flex-col bg-gray-50 dark:bg-slate-900/10 p-2.5 rounded-lg border border-gray-100 dark:border-cyan-900/10">
-                                <div className="flex justify-between items-center">
-                                  <span className="font-bold text-gray-900 dark:text-white">{c.code}</span>
-                                  <span className="text-xs text-primary font-semibold bg-primary/10 px-2 py-0.5 rounded">{c.credits} Credits</span>
-                                </div>
-                                <span className="text-gray-700 dark:text-gray-300 font-medium truncate mt-1">{c.title}</span>
-                                <span className="text-[11px] text-gray-400 mt-1 flex items-center gap-1">Lecturer: <span className="text-gray-600 dark:text-gray-300 font-medium">{c.lecturer}</span></span>
-                              </li>
-                            ))}
-                          </ul>
-                        )}
-                      </div>
                     )}
+
+                    {/* Subject/Course Enrolment Stats (Dynamically Auto-detected from Students) */}
+                    <div>
+                      <span className="block text-xs font-bold text-gray-400 dark:text-cyan-200/50 uppercase tracking-wider mb-2">
+                        Subject Enrolment Statistics
+                      </span>
+                      {Object.keys(subjectStats).length === 0 ? (
+                        <span className="text-gray-400 dark:text-cyan-200/30 italic block py-2 bg-gray-50/50 dark:bg-slate-900/5 px-3 rounded text-xs text-center border">
+                          No students assigned to subjects yet
+                        </span>
+                      ) : (
+                        <ul className="space-y-1.5 max-h-[150px] overflow-y-auto pr-0.5">
+                          {Object.entries(subjectStats).map(([sub, count]) => {
+                            let instructorName = '';
+                            if (settings.systemMode === 'Secondary') {
+                              instructorName = cls.subjectTeachers?.find(st => st.subject === sub)?.teacherName || '';
+                            } else if (settings.systemMode === 'Tertiary') {
+                              instructorName = cls.courses?.find(c => c.code === sub)?.lecturer || '';
+                            }
+
+                            return (
+                              <li key={sub} className="flex justify-between items-center bg-gray-52 dark:bg-slate-900/10 px-2.5 py-1.5 rounded-lg border border-gray-150/60 dark:border-cyan-900/10 hover:border-primary/20 transition-all">
+                                <div className="flex flex-col min-w-0 pr-2">
+                                  <span className="text-gray-700 dark:text-gray-300 font-bold truncate text-xs">{sub}</span>
+                                  {instructorName && (
+                                    <span className="text-[9px] text-gray-450 dark:text-cyan-200/30 truncate mt-0.5 font-medium">
+                                      {instructorName}
+                                    </span>
+                                  )}
+                                </div>
+                                <span className="font-extrabold text-[10px] text-primary dark:text-cyan-400 bg-primary/5 dark:bg-primary/10 px-2.5 py-0.5 rounded-full border border-primary/10 shrink-0">
+                                  {count} {count === 1 ? 'student' : 'students'}
+                                </span>
+                              </li>
+                            );
+                          })}
+                        </ul>
+                      )}
+                    </div>
                   </div>
                 </div>
                 
